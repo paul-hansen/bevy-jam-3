@@ -14,18 +14,20 @@ pub fn get_ship_path(scale: f32) -> Path {
         Vec2::new(0.66, 0.0),
     ];
 
-    path.iter().for_each(|vertex| {
-        path_builder.move_to(*vertex * scale);
-    });
+    //path_builder.move_to(path[0]);
+
+    for point in path {
+        path_builder.line_to(point * scale);
+    }
 
     path_builder.build()
 }
 
 #[derive(Bundle)]
 pub struct PlayerShipBundle {
-    shape_render: ShapeBundle,
-    stroke: Stroke,
-    fill: Fill,
+    pub shape_render: ShapeBundle,
+    pub stroke: Stroke,
+    pub fill: Fill,
 }
 
 impl Default for PlayerShipBundle {
@@ -33,10 +35,11 @@ impl Default for PlayerShipBundle {
         Self {
             shape_render: ShapeBundle {
                 path: get_ship_path(32.),
+                transform: Transform::from_xyz(0.0, 0.0, 0.5),
                 ..default()
             },
-            stroke: Stroke::new(Color::YELLOW, 2.0),
-            fill: Fill::color(Color::rgba(0.0, 0.0, 0.0, 0.0)),
+            stroke: Stroke::new(Color::YELLOW, 5.0),
+            fill: Fill::color(Color::rgba(0., 0., 0., 0.)),
         }
     }
 }

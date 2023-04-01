@@ -5,7 +5,6 @@ use std::net::{IpAddr, Ipv4Addr};
 use crate::player::Player;
 use bevy::prelude::*;
 use bevy::{
-    prelude::*,
     tasks::{IoTaskPool, TaskPool},
 };
 use bevy_replicon::prelude::AppReplicationExt;

@@ -10,6 +10,7 @@ use crate::cli::CliPlugin;
 use crate::network::NetworkPlugin;
 use crate::player::PlayerPlugin;
 use bevy::prelude::*;
+use bevy_prototype_lyon::prelude::ShapePlugin;
 use bundles::TestRenderingPlugin;
 
 mod bundles;
@@ -21,6 +22,7 @@ fn main() {
         .add_plugin(CliPlugin)
         .add_plugin(PlayerPlugin)
         .add_plugin(NetworkPlugin)
+        .add_plugin(ShapePlugin)
         .add_plugin(TestRenderingPlugin)
         .add_startup_system(setup);
 
