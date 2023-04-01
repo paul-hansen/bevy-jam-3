@@ -15,13 +15,20 @@ mod network;
 mod player;
 
 fn main() {
-    App::new()
-        .add_plugins(DefaultPlugins)
+    let mut app = App::new();
+    app.add_plugins(DefaultPlugins)
         .add_plugin(CliPlugin)
         .add_plugin(PlayerPlugin)
         .add_plugin(NetworkPlugin)
-        .add_startup_system(setup)
-        .run();
+        .add_startup_system(setup);
+
+    #[cfg(feature = "bevy_editor_pls")]
+    {
+        use bevy_editor_pls::EditorPlugin;
+        app.add_plugin(EditorPlugin::default());
+    }
+
+    app.run();
 }
 
 fn setup(mut commands: Commands) {
