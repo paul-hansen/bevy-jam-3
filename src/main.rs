@@ -6,13 +6,17 @@
 
 mod cli;
 
+use crate::cli::CliPlugin;
+use crate::network::NetworkPlugin;
 use bevy::prelude::*;
+
 mod network;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugin(CliPlugin)
+        .add_plugin(NetworkPlugin)
         .add_startup_system(setup)
         .run();
 }
