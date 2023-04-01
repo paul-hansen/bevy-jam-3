@@ -47,7 +47,6 @@ impl NetworkInfo {
                       warn!("Could not marshal response body to string: {}", e)
                     }
                   }
-
                 }, 
                 Err(e) => {
                   self.public_ip = None;
