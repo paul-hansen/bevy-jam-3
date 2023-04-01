@@ -8,23 +8,22 @@ mod cli;
 
 use crate::cli::CliPlugin;
 use crate::network::NetworkPlugin;
+use crate::player::PlayerPlugin;
 use bevy::prelude::*;
 
 mod network;
+mod player;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugin(CliPlugin)
+        .add_plugin(PlayerPlugin)
         .add_plugin(NetworkPlugin)
         .add_startup_system(setup)
         .run();
 }
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
-    commands.spawn(SpriteBundle {
-        texture: asset_server.load("icon.png"),
-        ..Default::default()
-    });
 }

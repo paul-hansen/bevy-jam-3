@@ -6,5 +6,14 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 bevy = "0.10"
+bevy_replicon = "0.2.0"
 clap = { version = "4.2.1", features = ["derive"] }
 surf = "2.3.2"
+
+# Enable a small amount of optimization in debug mode
+[profile.dev]
+opt-level = 1
+
+# Enable high optimizations for dependencies (incl. Bevy), but not for our code:
+[profile.dev.package."*"]
+opt-level = 3
