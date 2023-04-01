@@ -4,12 +4,15 @@
 // Feel free to delete this line.
 #![allow(clippy::too_many_arguments, clippy::type_complexity)]
 
+mod cli;
+
 use bevy::prelude::*;
 mod network;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .add_plugin(CliPlugin)
         .add_startup_system(setup)
         .run();
 }
