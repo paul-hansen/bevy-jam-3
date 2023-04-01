@@ -1,15 +1,16 @@
+#[cfg(feature = "bevy_editor_pls")]
+mod editor;
 mod util;
 
 use std::net::{IpAddr, Ipv4Addr};
 
 use crate::player::Player;
 use bevy::prelude::*;
-use bevy::{
-    tasks::{IoTaskPool, TaskPool},
-};
+use bevy::tasks::{IoTaskPool, TaskPool};
 use bevy_replicon::prelude::AppReplicationExt;
 use bevy_replicon::renet::ServerEvent;
 use bevy_replicon::ReplicationPlugins;
+
 #[derive(Resource)]
 pub struct NetworkInfo {
     pub public_ip: Option<IpAddr>,
@@ -67,6 +68,9 @@ impl Plugin for NetworkPlugin {
         app.replicate::<Transform>();
         app.replicate::<Player>();
         app.add_system(log_network_events);
+
+        #[cfg(feature = "bevy_editor_pls")]
+        app.add_plugin(editor::RenetEditorWindow);
     }
 }
 

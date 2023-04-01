@@ -18,19 +18,20 @@ mod network;
 mod player;
 fn main() {
     let mut app = App::new();
-    app.add_plugins(DefaultPlugins)
-        .add_plugin(CliPlugin)
-        .add_plugin(PlayerPlugin)
-        .add_plugin(NetworkPlugin)
-        .add_plugin(ShapePlugin)
-        .add_plugin(TestRenderingPlugin)
-        .add_startup_system(setup);
+    app.add_plugins(DefaultPlugins);
 
     #[cfg(feature = "bevy_editor_pls")]
     {
         use bevy_editor_pls::EditorPlugin;
         app.add_plugin(EditorPlugin::default());
     }
+
+    app.add_plugin(CliPlugin)
+        .add_plugin(PlayerPlugin)
+        .add_plugin(NetworkPlugin)
+        .add_plugin(ShapePlugin)
+        .add_plugin(TestRenderingPlugin)
+        .add_startup_system(setup);
 
     app.run();
 }

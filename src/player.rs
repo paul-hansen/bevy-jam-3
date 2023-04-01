@@ -77,6 +77,7 @@ impl PlayerColor {
 #[derive(Bundle, Default)]
 pub struct PlayerBundle {
     sprite: SpriteBundle,
+    replication: Replication,
 }
 
 /// Server only
@@ -131,6 +132,7 @@ fn insert_player_bundle(
                         ..default()
                     }
                 },
+                ..default()
             })
             .id();
 

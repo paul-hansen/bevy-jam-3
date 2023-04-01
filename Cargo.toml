@@ -12,6 +12,7 @@ clap = { version = "4.2.1", features = ["derive"] }
 leafwing-input-manager = "0.9.1"
 surf = "2.3.2"
 bevy_prototype_lyon = "0.8.0"
+renet_visualizer = { version = "0.0.4", features = ["bevy"] }
 
 # Enable a small amount of optimization in debug mode
 [profile.dev]

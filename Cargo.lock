@@ -918,6 +918,7 @@ dependencies = [
  "bevy_replicon",
  "clap",
  "leafwing-input-manager",
+ "renet_visualizer",
  "surf",
 ]
 
@@ -4063,6 +4064,17 @@ dependencies = [
  "log",
  "rechannel",
  "renetcode",
+]
+
+[[package]]
+name = "renet_visualizer"
+version = "0.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cf11a54bed8e7df12e41b53dc911cd6a253692da29ccea8e21f82929d4a163e9"
+dependencies = [
+ "bevy_ecs",
+ "egui",
+ "renet",
 ]
 
 [[package]]
