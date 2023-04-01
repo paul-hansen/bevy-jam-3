@@ -1,3 +1,4 @@
+use crate::player::{spawn_player, PlayerColor};
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use bevy_replicon::prelude::*;
@@ -75,6 +76,8 @@ fn cli_system(
 
             let server =
                 RenetServer::new(current_time, server_config, connection_config, socket).unwrap();
+
+            spawn_player(PlayerColor::get(0), &mut commands);
 
             commands.insert_resource(server);
             primary_window.single_mut().title = "Server".to_string();
