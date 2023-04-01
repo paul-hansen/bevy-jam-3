@@ -1,15 +1,35 @@
 use bevy::prelude::*;
 use bevy_replicon::prelude::Replication;
-use bevy_replicon::renet::ServerEvent;
+use bevy_replicon::renet::{RenetClient, ServerEvent};
+use leafwing_input_manager::prelude::*;
 
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
+        app.add_plugin(InputManagerPlugin::<PlayerAction>::default());
         app.register_type::<PlayerColor>();
         app.register_type::<Player>();
+        app.register_type::<Option<u64>>();
         app.add_system(insert_player_bundle);
+        app.add_system(player_actions);
         app.add_system(spawn_player_on_connected);
+    }
+}
+
+#[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug)]
+pub enum PlayerAction {
+    Aim,
+    Shoot,
+    Thrust,
+}
+
+impl PlayerAction {
+    fn default_input_map() -> InputMap<Self> {
+        let mut input_map = InputMap::default();
+        input_map.insert(VirtualDPad::wasd(), Self::Aim);
+        input_map.insert(DualAxis::left_stick(), Self::Aim);
+        input_map
     }
 }
 
@@ -17,6 +37,7 @@ impl Plugin for PlayerPlugin {
 #[reflect(Component, Default)]
 pub struct Player {
     color: PlayerColor,
+    client_id: Option<u64>,
 }
 
 #[derive(Default, Copy, Clone, Debug, Reflect)]
@@ -56,14 +77,18 @@ impl PlayerColor {
 #[derive(Bundle, Default)]
 pub struct PlayerBundle {
     sprite: SpriteBundle,
-    player: Player,
-    replication: Replication,
 }
 
 /// Server only
-pub fn spawn_player(color: PlayerColor, cmds: &mut Commands) -> Entity {
+pub fn spawn_player(color: PlayerColor, cmds: &mut Commands, client_id: Option<u64>) -> Entity {
     debug!("Spawning player");
-    return cmds.spawn((Player { color }, Replication)).id();
+    return cmds
+        .spawn((
+            Player { color, client_id },
+            Replication,
+            ActionState::<PlayerAction>::default(),
+        ))
+        .id();
 }
 
 fn spawn_player_on_connected(
@@ -72,10 +97,14 @@ fn spawn_player_on_connected(
     player_query: Query<With<Player>>,
 ) {
     for event in events.iter() {
-        if let ServerEvent::ClientConnected(_, _) = event {
+        if let ServerEvent::ClientConnected(client_id, _) = event {
             let new_player_index = player_query.iter().count();
 
-            spawn_player(PlayerColor::get(new_player_index), &mut commands);
+            spawn_player(
+                PlayerColor::get(new_player_index),
+                &mut commands,
+                Some(*client_id),
+            );
         }
     }
 }
@@ -85,23 +114,53 @@ fn insert_player_bundle(
     mut commands: Commands,
     query: Query<(Entity, &Player), Added<Player>>,
     asset_server: ResMut<AssetServer>,
+    client: Option<Res<RenetClient>>,
 ) {
     for (entity, player) in query.iter() {
         info!("Inserting Player bundle for new player");
-        commands.entity(entity).insert(PlayerBundle {
-            player: *player,
-            sprite: {
-                SpriteBundle {
-                    sprite: Sprite {
-                        color: player.color.color(),
+        let player_entity = commands
+            .entity(entity)
+            .insert(PlayerBundle {
+                sprite: {
+                    SpriteBundle {
+                        sprite: Sprite {
+                            color: player.color.color(),
+                            ..default()
+                        },
+                        texture: asset_server.load("icon.png"),
                         ..default()
-                    },
-                    texture: asset_server.load("icon.png"),
-                    ..default()
-                }
-            },
-            ..default()
-        });
+                    }
+                },
+            })
+            .id();
+
+        if let Some(client) = &client {
+            // If we are the client this player is for, add an input map
+            if player.client_id == Some(client.client_id()) {
+                commands
+                    .entity(player_entity)
+                    .insert(PlayerAction::default_input_map());
+            }
+        } else if client.is_none() && player.client_id.is_none() {
+            // If we are the server and this player is controlled on the server add an input map
+            commands
+                .entity(player_entity)
+                .insert(PlayerAction::default_input_map());
+        }
+    }
+}
+
+pub fn player_actions(
+    mut query: Query<(&mut Transform, &ActionState<PlayerAction>), With<Player>>,
+    time: Res<Time>,
+) {
+    for (mut transform, action_state) in query.iter_mut() {
+        if let Some(move_direction) = action_state.axis_pair(PlayerAction::Aim) {
+            if move_direction.length_squared() > 0.01 {
+                transform.translation +=
+                    move_direction.xy().extend(0.0) * time.delta_seconds() * 100.0;
+            }
+        }
     }
 }
 
