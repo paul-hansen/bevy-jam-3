@@ -5,6 +5,7 @@
 #![allow(clippy::too_many_arguments, clippy::type_complexity)]
 
 use bevy::prelude::*;
+mod network;
 
 fn main() {
     App::new()
