@@ -2,9 +2,12 @@ mod util;
 
 use std::net::{IpAddr, Ipv4Addr};
 
-use bevy::{prelude::*, tasks::{IoTaskPool, TaskPool}};
 use crate::player::Player;
 use bevy::prelude::*;
+use bevy::{
+    prelude::*,
+    tasks::{IoTaskPool, TaskPool},
+};
 use bevy_replicon::prelude::AppReplicationExt;
 use bevy_replicon::renet::ServerEvent;
 use bevy_replicon::ReplicationPlugins;
@@ -14,12 +17,15 @@ pub struct NetworkInfo {
     task_pool: &'static IoTaskPool,
 }
 
-impl Default for NetworkInfo{
+impl Default for NetworkInfo {
     fn default() -> Self {
-        let mut val = Self { public_ip: Default::default(), task_pool: IoTaskPool::init(||{TaskPool::new()}) };
-        
+        let mut val = Self {
+            public_ip: Default::default(),
+            task_pool: IoTaskPool::init(TaskPool::new),
+        };
+
         val.fetch_ip();
-        
+
         val
     }
 }
@@ -27,32 +33,28 @@ impl NetworkInfo {
     pub fn fetch_ip(&mut self) {
         self.task_pool.scope(|scope| {
             scope.spawn(async {
-              match surf::get("https://api.ipify.org/").await{
-                Ok(mut response) => {
-                  match response.body_string().await{
-                    Ok(ip_text) => {
-                      match ip_text.parse::<Ipv4Addr>() {
-                        Ok(address) => {
-                          info!("Found Public IP: {}", address);
-                          self.public_ip = Some(IpAddr::V4(address));
-                        }, 
+                match surf::get("https://api.ipify.org/").await {
+                    Ok(mut response) => match response.body_string().await {
+                        Ok(ip_text) => match ip_text.parse::<Ipv4Addr>() {
+                            Ok(address) => {
+                                info!("Found Public IP: {}", address);
+                                self.public_ip = Some(IpAddr::V4(address));
+                            }
+                            Err(e) => {
+                                self.public_ip = None;
+                                warn!("Could not parse ip [{}]: {}", ip_text, e)
+                            }
+                        },
                         Err(e) => {
-                          self.public_ip = None;
-                          warn!("Could not parse ip [{}]: {}", ip_text, e)
+                            self.public_ip = None;
+                            warn!("Could not marshal response body to string: {}", e)
                         }
-                      }
                     },
                     Err(e) => {
-                      self.public_ip = None;
-                      warn!("Could not marshal response body to string: {}", e)
+                        self.public_ip = None;
+                        warn!("Could not get get ip: {}", e);
                     }
-                  }
-                }, 
-                Err(e) => {
-                  self.public_ip = None;
-                  warn!("Could not get get ip: {}", e);
                 }
-              }
             });
         });
     }

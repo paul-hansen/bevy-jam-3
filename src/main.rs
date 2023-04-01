@@ -10,16 +10,18 @@ use crate::cli::CliPlugin;
 use crate::network::NetworkPlugin;
 use crate::player::PlayerPlugin;
 use bevy::prelude::*;
+use bundles::TestRenderingPlugin;
 
+mod bundles;
 mod network;
 mod player;
-
 fn main() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins)
         .add_plugin(CliPlugin)
         .add_plugin(PlayerPlugin)
         .add_plugin(NetworkPlugin)
+        .add_plugin(TestRenderingPlugin)
         .add_startup_system(setup);
 
     #[cfg(feature = "bevy_editor_pls")]

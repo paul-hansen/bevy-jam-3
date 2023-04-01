@@ -10,6 +10,7 @@ bevy_editor_pls = { version = "0.4.0", features = ["highlight_changes"], optiona
 bevy_replicon = "0.2.0"
 clap = { version = "4.2.1", features = ["derive"] }
 surf = "2.3.2"
+bevy_prototype_lyon = "0.8.0"
 
 # Enable a small amount of optimization in debug mode
 [profile.dev]
