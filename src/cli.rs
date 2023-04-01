@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::window::PrimaryWindow;
 use bevy_replicon::prelude::*;
 use bevy_replicon::renet::{
     ClientAuthentication, RenetConnectionConfig, ServerAuthentication, ServerConfig,
@@ -38,7 +39,12 @@ enum Cli {
     },
 }
 
-fn cli_system(mut commands: Commands, settings: Res<Cli>, network_channels: Res<NetworkChannels>) {
+fn cli_system(
+    mut commands: Commands,
+    settings: Res<Cli>,
+    network_channels: Res<NetworkChannels>,
+    mut primary_window: Query<&mut Window, With<PrimaryWindow>>,
+) {
     match *settings {
         Cli::Server {
             port,
@@ -71,6 +77,7 @@ fn cli_system(mut commands: Commands, settings: Res<Cli>, network_channels: Res<
                 RenetServer::new(current_time, server_config, connection_config, socket).unwrap();
 
             commands.insert_resource(server);
+            primary_window.single_mut().title = "Server".to_string();
         }
         Cli::Client { port, ip } => {
             let receive_channels_config = network_channels.server_channels();
@@ -97,6 +104,7 @@ fn cli_system(mut commands: Commands, settings: Res<Cli>, network_channels: Res<
             let client =
                 RenetClient::new(current_time, socket, connection_config, authentication).unwrap();
             commands.insert_resource(client);
+            primary_window.single_mut().title = "Client".to_string();
         }
     }
 }
