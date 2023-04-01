@@ -6,6 +6,7 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 bevy = "0.10"
+bevy_replicon = "0.2.0"
 clap = { version = "4.2.1", features = ["derive"] }
 
 # Enable a small amount of optimization in debug mode
