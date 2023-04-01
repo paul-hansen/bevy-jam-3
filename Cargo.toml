@@ -7,3 +7,4 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 bevy = "0.10"
 clap = { version = "4.2.1", features = ["derive"] }
+surf = "2.3.2"
