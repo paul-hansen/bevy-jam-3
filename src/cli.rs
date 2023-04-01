@@ -77,7 +77,7 @@ fn cli_system(
             let server =
                 RenetServer::new(current_time, server_config, connection_config, socket).unwrap();
 
-            spawn_player(PlayerColor::get(0), &mut commands);
+            spawn_player(PlayerColor::get(0), &mut commands, None);
 
             commands.insert_resource(server);
             primary_window.single_mut().title = "Server".to_string();

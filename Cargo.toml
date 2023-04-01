@@ -9,6 +9,7 @@ bevy = "0.10"
 bevy_editor_pls = { version = "0.4.0", features = ["highlight_changes"], optional = true}
 bevy_replicon = "0.2.0"
 clap = { version = "4.2.1", features = ["derive"] }
+leafwing-input-manager = "0.9.1"
 surf = "2.3.2"
 
 # Enable a small amount of optimization in debug mode
