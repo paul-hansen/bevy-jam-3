@@ -1,3 +1,4 @@
+use crate::game_manager::GameState;
 use crate::network::commands::NetworkCommandsExt;
 use crate::network::DEFAULT_PORT;
 use bevy::prelude::*;
@@ -9,7 +10,7 @@ pub struct CliPlugin;
 impl Plugin for CliPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(Cli::parse());
-        app.add_startup_system(cli_system);
+        app.add_systems((cli_system,).in_schedule(OnEnter(GameState::MainMenu)));
     }
 }
 
@@ -42,7 +43,5 @@ fn cli_system(mut commands: Commands, settings: Res<Cli>) {
         commands.listen(host_on_ip, settings.bind, settings.port);
     } else if let Some(join_ip) = settings.connect {
         commands.connect(join_ip, settings.bind, settings.port);
-    } else {
-        todo!("Show gui");
     }
 }

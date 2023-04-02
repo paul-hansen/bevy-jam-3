@@ -22,6 +22,8 @@ mod constructed_geometry;
 mod game_manager;
 mod network;
 mod player;
+mod forms;
+
 fn main() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins);
@@ -32,12 +34,12 @@ fn main() {
         app.add_plugin(EditorPlugin::default());
     }
 
-    app.add_plugin(CliPlugin)
-        .add_plugin(PlayerPlugin)
+    app.add_plugin(PlayerPlugin)
         .add_plugin(NetworkPlugin)
         .add_plugin(ShapePlugin)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
         .add_plugin(GameManager)
+        .add_plugin(CliPlugin)
         .insert_resource(Msaa::Sample8)
         .add_startup_system(setup);
 
