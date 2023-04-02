@@ -54,7 +54,7 @@ fn cli_system(
     if let Some(host_on_ip) = settings.listen {
         let send_channels_config = network_channels.server_channels();
         let receive_channels_config = network_channels.client_channels();
-        const MAX_CLIENTS: usize = 1;
+        const MAX_CLIENTS: usize = 16;
         let current_time = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap();
