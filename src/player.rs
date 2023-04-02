@@ -1,11 +1,16 @@
 use crate::bundles::lyon_rendering::ship_paths::SHIP_PATH;
 use crate::bundles::lyon_rendering::{get_path_from_verts, LyonRenderBundle};
+use crate::network::NetworkOwner;
+use bevy::math::Vec3Swizzles;
 use bevy::prelude::*;
 use bevy_prototype_lyon::draw::Stroke;
 use bevy_prototype_lyon::prelude::ShapeBundle;
-use bevy_replicon::prelude::Replication;
+use bevy_replicon::prelude::*;
 use bevy_replicon::renet::{RenetClient, ServerEvent};
+use leafwing_input_manager::orientation::{Orientation, Rotation};
 use leafwing_input_manager::prelude::*;
+use serde::{Deserialize, Serialize};
+use std::f32::consts::FRAC_2_PI;
 
 pub struct PlayerPlugin;
 
@@ -14,16 +19,16 @@ impl Plugin for PlayerPlugin {
         app.add_plugin(InputManagerPlugin::<PlayerAction>::default());
         app.register_type::<PlayerColor>();
         app.register_type::<Player>();
-        app.register_type::<Option<u64>>();
         app.add_system(insert_player_bundle);
         app.add_system(player_actions);
         app.add_system(spawn_player_on_connected);
     }
 }
 
-#[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug)]
+#[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug, Serialize, Deserialize, Reflect)]
 pub enum PlayerAction {
-    Aim,
+    TurnLeft,
+    TurnRight,
     Shoot,
     Thrust,
 }
@@ -31,8 +36,24 @@ pub enum PlayerAction {
 impl PlayerAction {
     fn default_input_map() -> InputMap<Self> {
         let mut input_map = InputMap::default();
-        input_map.insert(VirtualDPad::wasd(), Self::Aim);
-        input_map.insert(DualAxis::left_stick(), Self::Aim);
+        input_map.insert(KeyCode::A, Self::TurnLeft);
+        input_map.insert(KeyCode::Left, Self::TurnLeft);
+        input_map.insert(KeyCode::Right, Self::TurnRight);
+        input_map.insert(KeyCode::D, Self::TurnRight);
+        input_map.insert(
+            SingleAxis::negative_only(GamepadAxisType::LeftStickX, 0.1),
+            Self::TurnLeft,
+        );
+        input_map.insert(
+            SingleAxis::positive_only(GamepadAxisType::LeftStickX, 0.1),
+            Self::TurnRight,
+        );
+        input_map.insert(
+            SingleAxis::positive_only(GamepadAxisType::LeftStickY, 0.1),
+            Self::Thrust,
+        );
+        input_map.insert(KeyCode::W, Self::Thrust);
+        input_map.insert(KeyCode::Up, Self::Thrust);
         input_map
     }
 }
@@ -41,7 +62,6 @@ impl PlayerAction {
 #[reflect(Component, Default)]
 pub struct Player {
     color: PlayerColor,
-    client_id: Option<u64>,
 }
 
 #[derive(Default, Copy, Clone, Debug, Reflect)]
@@ -78,10 +98,11 @@ impl PlayerColor {
     }
 }
 
-#[derive(Bundle)]
+#[derive(Bundle, Default)]
 pub struct PlayerBundle {
     lyon: LyonRenderBundle,
     replication: Replication,
+    action_state: ActionState<PlayerAction>,
 }
 
 impl PlayerBundle {
@@ -97,17 +118,18 @@ impl PlayerBundle {
                 stroke: Stroke::new(color.color(), 3.0),
                 ..default()
             },
-            replication: Replication,
+            ..default()
         }
     }
 }
 
 /// Server only
-pub fn spawn_player(color: PlayerColor, cmds: &mut Commands, client_id: Option<u64>) -> Entity {
+pub fn spawn_player(color: PlayerColor, commands: &mut Commands, client_id: u64) -> Entity {
     debug!("Spawning player");
-    return cmds
+    return commands
         .spawn((
-            Player { color, client_id },
+            Player { color },
+            NetworkOwner(client_id),
             Replication,
             ActionState::<PlayerAction>::default(),
         ))
@@ -126,7 +148,7 @@ fn spawn_player_on_connected(
             spawn_player(
                 PlayerColor::get(new_player_index),
                 &mut commands,
-                Some(*client_id),
+                *client_id,
             );
         }
     }
@@ -135,10 +157,10 @@ fn spawn_player_on_connected(
 /// Handles inserting the player bundle whenever [`Player`] is added to an entity.
 fn insert_player_bundle(
     mut commands: Commands,
-    query: Query<(Entity, &Player), Added<Player>>,
+    query: Query<(Entity, &Player, &NetworkOwner), Added<Player>>,
     client: Option<Res<RenetClient>>,
 ) {
-    for (entity, player) in query.iter() {
+    for (entity, player, client_id) in query.iter() {
         info!("Inserting Player bundle for new player");
         let player_entity = commands
             .entity(entity)
@@ -147,12 +169,12 @@ fn insert_player_bundle(
 
         if let Some(client) = &client {
             // If we are the client this player is for, add an input map
-            if player.client_id == Some(client.client_id()) {
+            if client_id.0 == client.client_id() {
                 commands
                     .entity(player_entity)
                     .insert(PlayerAction::default_input_map());
             }
-        } else if client.is_none() && player.client_id.is_none() {
+        } else if client_id.0 == SERVER_ID {
             // If we are the server and this player is controlled on the server add an input map
             commands
                 .entity(player_entity)
@@ -166,11 +188,28 @@ pub fn player_actions(
     time: Res<Time>,
 ) {
     for (mut transform, action_state) in query.iter_mut() {
-        if let Some(move_direction) = action_state.axis_pair(PlayerAction::Aim) {
-            if move_direction.length_squared() > 0.01 {
-                transform.translation +=
-                    move_direction.xy().extend(0.0) * time.delta_seconds() * 100.0;
-            }
+        if action_state.pressed(PlayerAction::Thrust) {
+            let forward = transform.up();
+            transform.translation += forward.xy().extend(0.0) * time.delta_seconds() * 100.0;
+        }
+        if action_state.pressed(PlayerAction::TurnRight) {
+            let right =
+                Quat::from_rotation_z(transform.rotation.to_euler(EulerRot::XYZ).2 - FRAC_2_PI);
+
+            transform.rotation.rotate_towards(
+                right,
+                Some(Rotation::from_degrees(90.0 * time.delta_seconds())),
+            );
+        }
+
+        if action_state.pressed(PlayerAction::TurnLeft) {
+            let left =
+                Quat::from_rotation_z(transform.rotation.to_euler(EulerRot::XYZ).2 + FRAC_2_PI);
+
+            transform.rotation.rotate_towards(
+                left,
+                Some(Rotation::from_degrees(90.0 * time.delta_seconds())),
+            );
         }
     }
 }

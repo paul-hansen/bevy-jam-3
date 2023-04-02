@@ -920,6 +920,7 @@ dependencies = [
  "lazy_static",
  "leafwing-input-manager",
  "renet_visualizer",
+ "serde",
  "surf",
 ]
 
