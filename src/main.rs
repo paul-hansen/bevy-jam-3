@@ -8,7 +8,9 @@ mod cli;
 use crate::cli::CliPlugin;
 use crate::network::NetworkPlugin;
 use crate::player::PlayerPlugin;
+use bevy::core_pipeline::bloom::{BloomCompositeMode, BloomSettings};
 use bevy::core_pipeline::clear_color::ClearColorConfig;
+use bevy::core_pipeline::tonemapping::Tonemapping;
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::ShapePlugin;
 use bundles::lyon_rendering::TestRenderingPlugin;
@@ -39,10 +41,21 @@ fn main() {
 }
 
 fn setup(mut commands: Commands) {
-    commands.spawn(Camera2dBundle {
-        camera_2d: Camera2d {
-            clear_color: ClearColorConfig::Custom(Color::rgb_u8(0, 0, 0)),
+    commands.spawn((
+        Camera2dBundle {
+            camera: Camera {
+                hdr: true,
+                ..default()
+            },
+            camera_2d: Camera2d {
+                clear_color: ClearColorConfig::Custom(Color::rgb_u8(0, 0, 0)),
+            },
+            tonemapping: Tonemapping::TonyMcMapface,
+            ..default()
         },
-        ..default()
-    });
+        BloomSettings {
+            composite_mode: BloomCompositeMode::Additive,
+            ..default()
+        },
+    ));
 }
