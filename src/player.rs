@@ -1,4 +1,8 @@
+use crate::bundles::lyon_rendering::ship_paths::SHIP_PATH;
+use crate::bundles::lyon_rendering::{get_path_from_verts, LyonRenderBundle};
 use bevy::prelude::*;
+use bevy_prototype_lyon::draw::Stroke;
+use bevy_prototype_lyon::prelude::ShapeBundle;
 use bevy_replicon::prelude::Replication;
 use bevy_replicon::renet::{RenetClient, ServerEvent};
 use leafwing_input_manager::prelude::*;
@@ -74,10 +78,28 @@ impl PlayerColor {
     }
 }
 
-#[derive(Bundle, Default)]
+#[derive(Bundle)]
 pub struct PlayerBundle {
-    sprite: SpriteBundle,
+    lyon: LyonRenderBundle,
     replication: Replication,
+}
+
+impl PlayerBundle {
+    fn with_color(color: PlayerColor) -> Self {
+        Self {
+            lyon: LyonRenderBundle {
+                shape_render: ShapeBundle {
+                    path: get_path_from_verts(SHIP_PATH.to_vec(), 32.),
+                    transform: Transform::from_xyz(0.0, 0.0, 0.5),
+
+                    ..default()
+                },
+                stroke: Stroke::new(color.color(), 3.0),
+                ..default()
+            },
+            replication: Replication,
+        }
+    }
 }
 
 /// Server only
@@ -114,26 +136,13 @@ fn spawn_player_on_connected(
 fn insert_player_bundle(
     mut commands: Commands,
     query: Query<(Entity, &Player), Added<Player>>,
-    asset_server: ResMut<AssetServer>,
     client: Option<Res<RenetClient>>,
 ) {
     for (entity, player) in query.iter() {
         info!("Inserting Player bundle for new player");
         let player_entity = commands
             .entity(entity)
-            .insert(PlayerBundle {
-                sprite: {
-                    SpriteBundle {
-                        sprite: Sprite {
-                            color: player.color.color(),
-                            ..default()
-                        },
-                        texture: asset_server.load("icon.png"),
-                        ..default()
-                    }
-                },
-                ..default()
-            })
+            .insert(PlayerBundle::with_color(player.color))
             .id();
 
         if let Some(client) = &client {

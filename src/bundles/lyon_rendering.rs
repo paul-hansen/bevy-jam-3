@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::{Fill, Path, PathBuilder, ShapeBundle, Stroke};
 
-
 use self::ship_paths::SHIP_PATH;
 
 pub struct TestRenderingPlugin;
@@ -44,12 +43,6 @@ pub fn get_path_from_verts(points: Vec<(f32, f32)>, scale: f32) -> Path {
 }
 
 pub fn spawn_test_renders(mut commands: Commands) {
-    info!("Spawning Ship");
-
-    commands
-        .spawn(LyonRenderBundle::default())
-        .insert(Name::new("Player"));
-
     commands.spawn(LyonRenderBundle {
         shape_render: ShapeBundle {
             path: get_path_from_verts(roid_paths::ROID_PATH.to_vec(), 48.0),
@@ -69,7 +62,7 @@ pub fn spawn_test_renders(mut commands: Commands) {
     });
 }
 
-mod ship_paths {
+pub mod ship_paths {
     use lazy_static::lazy_static;
 
     lazy_static! {
