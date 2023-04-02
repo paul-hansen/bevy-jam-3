@@ -10,7 +10,7 @@ use crate::network::NetworkPlugin;
 use crate::player::PlayerPlugin;
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::ShapePlugin;
-use bundles::TestRenderingPlugin;
+use bundles::lyon_rendering::TestRenderingPlugin;
 
 mod bundles;
 mod network;
