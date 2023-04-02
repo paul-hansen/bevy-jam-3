@@ -1,3 +1,4 @@
+use crate::bundles::PhysicsBundle;
 use crate::bundles::lyon_rendering::ship_paths::SHIP_PATH;
 use crate::bundles::lyon_rendering::{get_path_from_verts, LyonRenderBundle};
 use crate::network::NetworkOwner;
@@ -5,12 +6,11 @@ use bevy::math::Vec3Swizzles;
 use bevy::prelude::*;
 use bevy_prototype_lyon::draw::Stroke;
 use bevy_prototype_lyon::prelude::ShapeBundle;
+use bevy_rapier2d::prelude::{Velocity};
 use bevy_replicon::prelude::*;
 use bevy_replicon::renet::{RenetClient, ServerEvent};
-use leafwing_input_manager::orientation::{Orientation, Rotation};
 use leafwing_input_manager::prelude::*;
 use serde::{Deserialize, Serialize};
-use std::f32::consts::FRAC_2_PI;
 
 pub struct PlayerPlugin;
 
@@ -137,6 +137,7 @@ pub fn spawn_player(color: PlayerColor, commands: &mut Commands, client_id: u64)
             NetworkOwner(client_id),
             Replication,
             ActionState::<PlayerAction>::default(),
+            PhysicsBundle::default(),
         ))
         .id();
 }
@@ -189,32 +190,21 @@ fn insert_player_bundle(
 }
 
 pub fn player_actions(
-    mut query: Query<(&mut Transform, &ActionState<PlayerAction>), With<Player>>,
+    mut query: Query<(&Transform, &ActionState<PlayerAction>, &mut Velocity), With<Player>>,
     time: Res<Time>,
 ) {
-    for (mut transform, action_state) in query.iter_mut() {
+    for (transform, action_state, mut velocity) in query.iter_mut() {
         if action_state.pressed(PlayerAction::Thrust) {
             let forward = transform.up();
-            transform.translation += forward.xy().extend(0.0) * time.delta_seconds() * 100.0;
+            velocity.linvel += forward.xy() * time.delta_seconds() * 50.0;
         }
         if action_state.pressed(PlayerAction::TurnRight) {
-            let right =
-                Quat::from_rotation_z(transform.rotation.to_euler(EulerRot::XYZ).2 - FRAC_2_PI);
-
-            transform.rotation.rotate_towards(
-                right,
-                Some(Rotation::from_degrees(90.0 * time.delta_seconds())),
-            );
+            velocity.angvel-= 7.0 * time.delta_seconds();
         }
 
         if action_state.pressed(PlayerAction::TurnLeft) {
-            let left =
-                Quat::from_rotation_z(transform.rotation.to_euler(EulerRot::XYZ).2 + FRAC_2_PI);
+            velocity.angvel+= 7.0 * time.delta_seconds();
 
-            transform.rotation.rotate_towards(
-                left,
-                Some(Rotation::from_degrees(90.0 * time.delta_seconds())),
-            );
         }
     }
 }

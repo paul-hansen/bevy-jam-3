@@ -13,6 +13,7 @@ use bevy::core_pipeline::clear_color::ClearColorConfig;
 use bevy::core_pipeline::tonemapping::{DebandDither, Tonemapping};
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::ShapePlugin;
+use bevy_rapier2d::prelude::{RapierPhysicsPlugin, NoUserData};
 use bundles::lyon_rendering::TestRenderingPlugin;
 
 mod bundles;
@@ -34,6 +35,7 @@ fn main() {
         .add_plugin(NetworkPlugin)
         .add_plugin(ShapePlugin)
         .add_plugin(TestRenderingPlugin)
+        .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
         .insert_resource(Msaa::Sample8)
         .add_startup_system(setup);
 
