@@ -5,6 +5,7 @@ mod util;
 use std::fmt::Debug;
 use std::net::{IpAddr, Ipv4Addr};
 
+use crate::asteroid::Asteroid;
 use crate::player::{Player, PlayerAction};
 use bevy::prelude::*;
 use bevy::tasks::{IoTaskPool, TaskPool};
@@ -74,6 +75,7 @@ impl Plugin for NetworkPlugin {
         app.replicate::<Transform>();
         app.replicate::<Player>();
         app.replicate::<NetworkOwner>();
+        app.replicate::<Asteroid>();
         app.add_system(log_network_events);
         app.add_client_event::<ActionDiff<PlayerAction, NetworkOwner>>();
         app.add_system(

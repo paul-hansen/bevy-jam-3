@@ -1,6 +1,7 @@
 use crate::bundles::lyon_rendering::ship_paths::SHIP_PATH;
 use crate::bundles::lyon_rendering::{get_path_from_verts, LyonRenderBundle};
 use crate::bundles::PhysicsBundle;
+use crate::game_manager::GameState;
 use crate::network::NetworkOwner;
 use bevy::math::Vec3Swizzles;
 use bevy::prelude::*;
@@ -19,9 +20,15 @@ impl Plugin for PlayerPlugin {
         app.add_plugin(InputManagerPlugin::<PlayerAction>::default());
         app.register_type::<PlayerColor>();
         app.register_type::<Player>();
+        app.add_systems(
+            (
+                player_actions,
+                spawn_player_on_connected,
+            )
+                .in_set(OnUpdate(GameState::Playing)),
+        );
+        app.add_systems((pregame_listen_for_player_connect,).in_set(OnUpdate(GameState::PreGame)));
         app.add_system(insert_player_bundle);
-        app.add_system(player_actions);
-        app.add_system(spawn_player_on_connected);
     }
 }
 
@@ -142,20 +149,41 @@ pub fn spawn_player(color: PlayerColor, commands: &mut Commands, client_id: u64)
         .id();
 }
 
+/// Handle Player connection while in game
 fn spawn_player_on_connected(
     mut commands: Commands,
     mut events: EventReader<ServerEvent>,
     player_query: Query<With<Player>>,
+
 ) {
     for event in events.iter() {
         if let ServerEvent::ClientConnected(client_id, _) = event {
             let new_player_index = player_query.iter().count();
-
+            
             spawn_player(
                 PlayerColor::get(new_player_index),
                 &mut commands,
                 *client_id,
             );
+
+            info!("Player connected while in play state. Spawning Player")
+        }
+    }
+}
+
+pub fn pregame_listen_for_player_connect(
+    mut events: EventReader<ServerEvent>,
+    game_state: Res<State<GameState>>,
+    mut next_game_state: ResMut<NextState<GameState>>,
+) {
+    for event in events.iter() {
+        if let ServerEvent::ClientConnected(_client_id, _) = event {
+
+            if game_state.0 != GameState::Playing {
+                next_game_state.set(GameState::Playing);
+            }
+
+            info!("Player Connected in Pregame! Advancing to play state");
         }
     }
 }

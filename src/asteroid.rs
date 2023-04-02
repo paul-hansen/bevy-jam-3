@@ -1,21 +1,31 @@
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::{Path, ShapeBundle, Stroke};
 use bevy_replicon::replication_core::Replication;
+use serde::{Serialize, Deserialize};
 
 use crate::bundles::{
-    lyon_rendering::{get_path_from_verts, roid_paths::ROID_PATH, LyonRenderBundle},
+    lyon_rendering::{get_path_from_verts, roid_paths::{ROID_PATH, RoidPath, ROID_PATH2}, LyonRenderBundle},
     PhysicsBundle,
 };
 
-#[derive(Component, Default)]
-pub struct Asteroid;
+#[derive(Component, Reflect, Copy, Clone, PartialEq, Debug, Serialize, Deserialize)]
+#[reflect(Component, Default)]
+pub struct Asteroid{
+    pub scale: f32, 
+    pub path: RoidPath
+}
+
+impl Default for Asteroid{
+    fn default() -> Self {
+        Self { scale: 16.0, path: RoidPath::One}
+    }
+}
 
 #[derive(Bundle)]
 pub struct AsteroidBundle {
     physics: PhysicsBundle,
     render: LyonRenderBundle,
     replication: Replication,
-    asteroid: Asteroid,
 }
 
 impl Default for AsteroidBundle {
@@ -31,21 +41,38 @@ impl Default for AsteroidBundle {
                 ..Default::default()
             },
             replication: Default::default(),
-            asteroid: Default::default(),
         }
     }
 }
 
-pub fn spawn_roid(transform: Transform, path: Path, mut cmds: Commands) {
-    cmds.spawn(AsteroidBundle {
-        render: LyonRenderBundle {
-            shape_render: ShapeBundle {
-                path,
-                transform,
-                ..Default::default()
+impl From<(Transform, Path)> for AsteroidBundle {
+    fn from(value: (Transform, Path)) -> Self {
+        let (transform, path) = value;
+        AsteroidBundle {
+            render: LyonRenderBundle {
+                shape_render: ShapeBundle {
+                    path,
+                    transform,
+                    ..Default::default()
+                },
+                ..default()
             },
-            ..default()
-        },
-        ..Default::default()
+            ..Default::default()
+        }
+    }
+}
+
+//TODO: Consider how to group functions like this
+pub fn asteroid_spawn(new_roids: Query<(Entity, &Asteroid, &Transform), Added<Asteroid>>, mut cmds: Commands){
+    new_roids.for_each(|(ent, asteroid, transform)|{
+        let roid_path = match asteroid.path{
+            RoidPath::One => ROID_PATH.to_vec(),
+            RoidPath::Two => ROID_PATH2.to_vec(),
+        };
+        
+        cmds.entity(ent).insert(AsteroidBundle::from((
+            *transform,
+            get_path_from_verts(roid_path, asteroid.scale),
+        ))).insert(Name::new("Asteroid"));
     });
 }
