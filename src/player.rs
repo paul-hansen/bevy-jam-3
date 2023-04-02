@@ -111,7 +111,12 @@ impl PlayerBundle {
             lyon: LyonRenderBundle {
                 shape_render: ShapeBundle {
                     path: get_path_from_verts(SHIP_PATH.to_vec(), 32.),
-                    transform: Transform::from_xyz(0.0, 0.0, 0.5),
+                    transform: Transform::from_xyz(
+                        0.0,
+                        0.0,
+                        // Add an offset to prevent z-fighting
+                        0.5 + ((color as usize) as f32 * 0.01),
+                    ),
 
                     ..default()
                 },
