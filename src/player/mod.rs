@@ -1,8 +1,10 @@
+pub mod commands;
+
 use crate::bundles::lyon_rendering::ship_paths::SHIP_PATH;
 use crate::bundles::lyon_rendering::{get_path_from_verts, LyonRenderBundle};
-use crate::bundles::PhysicsBundle;
 use crate::game_manager::GameState;
 use crate::network::NetworkOwner;
+use crate::player::commands::PlayerCommands;
 use bevy::math::Vec3Swizzles;
 use bevy::prelude::*;
 use bevy_prototype_lyon::draw::Stroke;
@@ -131,20 +133,6 @@ impl PlayerBundle {
     }
 }
 
-/// Server only
-pub fn spawn_player(color: PlayerColor, commands: &mut Commands, client_id: u64) -> Entity {
-    debug!("Spawning player");
-    return commands
-        .spawn((
-            Player { color },
-            NetworkOwner(client_id),
-            Replication,
-            ActionState::<PlayerAction>::default(),
-            PhysicsBundle::default(),
-        ))
-        .id();
-}
-
 /// Handle Player connection while in game
 fn spawn_player_on_connected(
     mut commands: Commands,
@@ -154,12 +142,7 @@ fn spawn_player_on_connected(
     for event in events.iter() {
         if let ServerEvent::ClientConnected(client_id, _) = event {
             let new_player_index = player_query.iter().count();
-
-            spawn_player(
-                PlayerColor::get(new_player_index),
-                &mut commands,
-                *client_id,
-            );
+            commands.spawn_player(PlayerColor::get(new_player_index), NetworkOwner(*client_id));
 
             info!("Player connected while in play state. Spawning Player")
         }

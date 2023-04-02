@@ -1,3 +1,4 @@
+pub mod commands;
 #[cfg(feature = "bevy_editor_pls")]
 mod editor;
 mod util;
@@ -17,6 +18,10 @@ use leafwing_input_manager::action_state::{ActionDiff, ActionState};
 use leafwing_input_manager::systems::generate_action_diffs;
 use leafwing_input_manager::Actionlike;
 use serde::{Deserialize, Serialize};
+
+pub const DEFAULT_PORT: u16 = 4761;
+pub const PROTOCOL_ID: u64 = 0;
+pub const MAX_CLIENTS: usize = 16;
 
 #[derive(Resource)]
 pub struct NetworkInfo {
