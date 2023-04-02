@@ -8,6 +8,7 @@ mod cli;
 use crate::cli::CliPlugin;
 use crate::network::NetworkPlugin;
 use crate::player::PlayerPlugin;
+use bevy::core_pipeline::clear_color::ClearColorConfig;
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::ShapePlugin;
 use bundles::lyon_rendering::TestRenderingPlugin;
@@ -31,11 +32,17 @@ fn main() {
         .add_plugin(NetworkPlugin)
         .add_plugin(ShapePlugin)
         .add_plugin(TestRenderingPlugin)
+        .insert_resource(Msaa::Sample8)
         .add_startup_system(setup);
 
     app.run();
 }
 
 fn setup(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default());
+    commands.spawn(Camera2dBundle {
+        camera_2d: Camera2d {
+            clear_color: ClearColorConfig::Custom(Color::rgb_u8(0, 0, 0)),
+        },
+        ..default()
+    });
 }
