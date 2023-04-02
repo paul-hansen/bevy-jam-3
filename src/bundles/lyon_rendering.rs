@@ -78,7 +78,7 @@ pub mod ship_paths {
     }
 }
 
-mod roid_paths {
+pub mod roid_paths {
     use lazy_static::lazy_static;
 
     lazy_static! {

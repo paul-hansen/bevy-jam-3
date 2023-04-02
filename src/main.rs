@@ -13,9 +13,10 @@ use bevy::core_pipeline::clear_color::ClearColorConfig;
 use bevy::core_pipeline::tonemapping::{DebandDither, Tonemapping};
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::ShapePlugin;
-use bevy_rapier2d::prelude::{RapierPhysicsPlugin, NoUserData};
+use bevy_rapier2d::prelude::{NoUserData, RapierPhysicsPlugin};
 use bundles::lyon_rendering::TestRenderingPlugin;
 
+mod asteroid;
 mod bundles;
 mod network;
 mod player;

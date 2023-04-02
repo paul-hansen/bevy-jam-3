@@ -1,12 +1,12 @@
-use crate::bundles::PhysicsBundle;
 use crate::bundles::lyon_rendering::ship_paths::SHIP_PATH;
 use crate::bundles::lyon_rendering::{get_path_from_verts, LyonRenderBundle};
+use crate::bundles::PhysicsBundle;
 use crate::network::NetworkOwner;
 use bevy::math::Vec3Swizzles;
 use bevy::prelude::*;
 use bevy_prototype_lyon::draw::Stroke;
 use bevy_prototype_lyon::prelude::ShapeBundle;
-use bevy_rapier2d::prelude::{Velocity};
+use bevy_rapier2d::prelude::Velocity;
 use bevy_replicon::prelude::*;
 use bevy_replicon::renet::{RenetClient, ServerEvent};
 use leafwing_input_manager::prelude::*;
@@ -199,12 +199,11 @@ pub fn player_actions(
             velocity.linvel += forward.xy() * time.delta_seconds() * 50.0;
         }
         if action_state.pressed(PlayerAction::TurnRight) {
-            velocity.angvel-= 7.0 * time.delta_seconds();
+            velocity.angvel -= 7.0 * time.delta_seconds();
         }
 
         if action_state.pressed(PlayerAction::TurnLeft) {
-            velocity.angvel+= 7.0 * time.delta_seconds();
-
+            velocity.angvel += 7.0 * time.delta_seconds();
         }
     }
 }
