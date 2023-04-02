@@ -917,6 +917,7 @@ dependencies = [
  "bevy_prototype_lyon",
  "bevy_replicon",
  "clap",
+ "lazy_static",
  "leafwing-input-manager",
  "renet_visualizer",
  "surf",

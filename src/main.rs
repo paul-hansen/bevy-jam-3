@@ -3,7 +3,6 @@
 // workflow treats them as errors, so this allows them throughout the project.
 // Feel free to delete this line.
 #![allow(clippy::too_many_arguments, clippy::type_complexity)]
-
 mod cli;
 
 use crate::cli::CliPlugin;
@@ -16,6 +15,7 @@ use bundles::TestRenderingPlugin;
 mod bundles;
 mod network;
 mod player;
+
 fn main() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins);

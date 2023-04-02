@@ -1,7 +1,5 @@
 use bevy::prelude::*;
-use bevy_prototype_lyon::prelude::{ShapeBundle, Stroke};
-
-use crate::bundles::player_ship::get_ship_path;
+use bevy_prototype_lyon::prelude::{ShapeBundle, Stroke, PathBuilder, Path};
 
 use self::player_ship::PlayerShipBundle;
 
@@ -15,18 +13,20 @@ impl Plugin for TestRenderingPlugin {
     }
 }
 
+pub fn get_path_from_verts(points: Vec<Vec2>, scale: f32) -> Path{
+    let mut path_builder = PathBuilder::new();
+
+    for point in points {
+        path_builder.line_to(point * scale);
+    }
+
+    path_builder.build()
+}
+
 pub fn spawn_ship_system(mut commands: Commands) {
     info!("Spawning Ship");
 
     commands
-        .spawn(PlayerShipBundle {
-            shape_render: ShapeBundle {
-                path: get_ship_path(32.0),
-                transform: Transform::from_xyz(50.0, 50.0, 0.5),
-                ..default()
-            },
-            stroke: Stroke::new(Color::YELLOW, 2.0),
-            ..default()
-        })
+        .spawn(PlayerShipBundle::default())
         .insert(Name::new("Player"));
 }

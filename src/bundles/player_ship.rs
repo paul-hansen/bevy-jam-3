@@ -1,10 +1,11 @@
 use bevy::prelude::*;
-use bevy_prototype_lyon::prelude::{Fill, Path, PathBuilder, ShapeBundle, Stroke};
+use bevy_prototype_lyon::prelude::{Fill, ShapeBundle, Stroke};
+use lazy_static::lazy_static;
 
-pub fn get_ship_path(scale: f32) -> Path {
-    let mut path_builder = PathBuilder::new();
+use super::get_path_from_verts;
 
-    let path = vec![
+lazy_static!{
+    pub static ref SHIP_PATH: Vec<Vec2> =  vec![
         Vec2::new(0.33, 0.0),
         Vec2::new(0.25, 0.2),
         Vec2::new(0.0, 0.0),
@@ -13,15 +14,8 @@ pub fn get_ship_path(scale: f32) -> Path {
         Vec2::new(0.75, 0.2),
         Vec2::new(0.66, 0.0),
     ];
-
-    //path_builder.move_to(path[0]);
-
-    for point in path {
-        path_builder.line_to(point * scale);
-    }
-
-    path_builder.build()
 }
+
 
 #[derive(Bundle)]
 pub struct PlayerShipBundle {
@@ -34,11 +28,11 @@ impl Default for PlayerShipBundle {
     fn default() -> Self {
         Self {
             shape_render: ShapeBundle {
-                path: get_ship_path(32.),
+                path: get_path_from_verts(SHIP_PATH.to_vec(), 32.),
                 transform: Transform::from_xyz(0.0, 0.0, 0.5),
                 ..default()
             },
-            stroke: Stroke::new(Color::YELLOW, 5.0),
+            stroke: Stroke::new(Color::YELLOW, 3.0),
             fill: Fill::color(Color::rgba(0., 0., 0., 0.)),
         }
     }
