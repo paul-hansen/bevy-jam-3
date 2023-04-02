@@ -84,13 +84,12 @@ pub mod roid_paths {
     use serde::{Deserialize, Serialize};
 
     #[derive(Copy, Clone, Reflect, Serialize, Deserialize, Eq, Debug, PartialEq)]
-    pub enum RoidPath{
+    pub enum RoidPath {
         One,
         Two,
     }
 
     lazy_static! {
-        
         pub static ref ROID_PATH: Vec<(f32, f32)> = vec![
             (0.1, 0.0),
             (0.0, 0.1),

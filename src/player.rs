@@ -21,11 +21,7 @@ impl Plugin for PlayerPlugin {
         app.register_type::<PlayerColor>();
         app.register_type::<Player>();
         app.add_systems(
-            (
-                player_actions,
-                spawn_player_on_connected,
-            )
-                .in_set(OnUpdate(GameState::Playing)),
+            (player_actions, spawn_player_on_connected).in_set(OnUpdate(GameState::Playing)),
         );
         app.add_systems((pregame_listen_for_player_connect,).in_set(OnUpdate(GameState::PreGame)));
         app.add_system(insert_player_bundle);
@@ -154,12 +150,11 @@ fn spawn_player_on_connected(
     mut commands: Commands,
     mut events: EventReader<ServerEvent>,
     player_query: Query<With<Player>>,
-
 ) {
     for event in events.iter() {
         if let ServerEvent::ClientConnected(client_id, _) = event {
             let new_player_index = player_query.iter().count();
-            
+
             spawn_player(
                 PlayerColor::get(new_player_index),
                 &mut commands,
@@ -178,7 +173,6 @@ pub fn pregame_listen_for_player_connect(
 ) {
     for event in events.iter() {
         if let ServerEvent::ClientConnected(_client_id, _) = event {
-
             if game_state.0 != GameState::Playing {
                 next_game_state.set(GameState::Playing);
             }

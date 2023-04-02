@@ -6,6 +6,7 @@ use std::fmt::Debug;
 use std::net::{IpAddr, Ipv4Addr};
 
 use crate::asteroid::Asteroid;
+use crate::bundles::lyon_rendering::roid_paths::RoidPath;
 use crate::player::{Player, PlayerAction};
 use bevy::prelude::*;
 use bevy::tasks::{IoTaskPool, TaskPool};
@@ -72,6 +73,7 @@ impl Plugin for NetworkPlugin {
         app.init_resource::<NetworkInfo>();
         app.add_plugins(ReplicationPlugins);
         app.register_type::<NetworkOwner>();
+        app.register_type::<RoidPath>();
         app.replicate::<Transform>();
         app.replicate::<Player>();
         app.replicate::<NetworkOwner>();

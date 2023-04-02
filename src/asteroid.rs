@@ -1,23 +1,30 @@
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::{Path, ShapeBundle, Stroke};
 use bevy_replicon::replication_core::Replication;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use crate::bundles::{
-    lyon_rendering::{get_path_from_verts, roid_paths::{ROID_PATH, RoidPath, ROID_PATH2}, LyonRenderBundle},
+    lyon_rendering::{
+        get_path_from_verts,
+        roid_paths::{RoidPath, ROID_PATH, ROID_PATH2},
+        LyonRenderBundle,
+    },
     PhysicsBundle,
 };
 
 #[derive(Component, Reflect, Copy, Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[reflect(Component, Default)]
-pub struct Asteroid{
-    pub scale: f32, 
-    pub path: RoidPath
+pub struct Asteroid {
+    pub scale: f32,
+    pub path: RoidPath,
 }
 
-impl Default for Asteroid{
+impl Default for Asteroid {
     fn default() -> Self {
-        Self { scale: 16.0, path: RoidPath::One}
+        Self {
+            scale: 16.0,
+            path: RoidPath::One,
+        }
     }
 }
 
@@ -63,16 +70,21 @@ impl From<(Transform, Path)> for AsteroidBundle {
 }
 
 //TODO: Consider how to group functions like this
-pub fn asteroid_spawn(new_roids: Query<(Entity, &Asteroid, &Transform), Added<Asteroid>>, mut cmds: Commands){
-    new_roids.for_each(|(ent, asteroid, transform)|{
-        let roid_path = match asteroid.path{
+pub fn asteroid_spawn(
+    new_roids: Query<(Entity, &Asteroid, &Transform), Added<Asteroid>>,
+    mut cmds: Commands,
+) {
+    new_roids.for_each(|(ent, asteroid, transform)| {
+        let roid_path = match asteroid.path {
             RoidPath::One => ROID_PATH.to_vec(),
             RoidPath::Two => ROID_PATH2.to_vec(),
         };
-        
-        cmds.entity(ent).insert(AsteroidBundle::from((
-            *transform,
-            get_path_from_verts(roid_path, asteroid.scale),
-        ))).insert(Name::new("Asteroid"));
+
+        cmds.entity(ent)
+            .insert(AsteroidBundle::from((
+                *transform,
+                get_path_from_verts(roid_path, asteroid.scale),
+            )))
+            .insert(Name::new("Asteroid"));
     });
 }
