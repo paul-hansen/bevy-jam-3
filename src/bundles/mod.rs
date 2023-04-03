@@ -8,14 +8,14 @@ pub mod lyon_rendering;
 
 #[derive(Bundle)]
 pub struct PhysicsBundle {
-    collider: Collider,
-    rb: RigidBody,
-    velocity: Velocity,
-    mass: ColliderMassProperties,
-    damping: Damping,
-    ex_force: ExternalForce,
-    ex_impulse: ExternalImpulse,
-    gravity: GravityScale,
+    pub collider: Collider,
+    pub rb: RigidBody,
+    pub velocity: Velocity,
+    pub mass: ColliderMassProperties,
+    pub damping: Damping,
+    pub ex_force: ExternalForce,
+    pub ex_impulse: ExternalImpulse,
+    pub gravity: GravityScale,
 }
 
 impl Default for PhysicsBundle {
@@ -25,7 +25,7 @@ impl Default for PhysicsBundle {
             rb: RigidBody::Dynamic,
             velocity: Default::default(),
             mass: ColliderMassProperties::MassProperties(MassProperties {
-                local_center_of_mass: Vec2::new(16., 10.),
+                local_center_of_mass: Vec2::new(0., 0.),
                 mass: 1.0,
                 ..default()
             }),

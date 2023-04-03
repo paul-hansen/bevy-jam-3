@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::{Path, ShapeBundle, Stroke};
+use bevy_rapier2d::prelude::Collider;
 use serde::{Deserialize, Serialize};
 
 use crate::bundles::{
@@ -78,10 +79,16 @@ pub fn asteroid_spawn(
         };
 
         cmds.entity(ent)
-            .insert(AsteroidBundle::from((
-                *transform,
-                get_path_from_verts(roid_path, Vec2::splat(asteroid.scale)),
-            )))
+            .insert(AsteroidBundle{
+                physics: PhysicsBundle{
+                    collider: Collider::cuboid(asteroid.scale * 0.5, asteroid.scale * 0.5),
+                    ..Default::default()
+                },
+                ..AsteroidBundle::from((
+                    *transform,
+                    get_path_from_verts(roid_path, Vec2::splat(asteroid.scale)),
+                ))
+            })
             .insert(Name::new("Asteroid"));
     });
 }

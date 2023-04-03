@@ -36,7 +36,9 @@ pub fn get_path_from_verts(points: Vec<(f32, f32)>, scale: Vec2) -> Path {
     let mut path_builder = PathBuilder::new();
 
     for point in points {
-        path_builder.line_to(Vec2::from(point) * scale);
+        //Subtract 0.5 to center
+        let pt = Vec2::from(point) - 0.5;
+        path_builder.line_to(pt * scale);
     }
 
     path_builder.build()
