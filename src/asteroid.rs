@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::{Path, ShapeBundle, Stroke};
-use bevy_replicon::replication_core::Replication;
 use serde::{Deserialize, Serialize};
 
 use crate::bundles::{
@@ -32,7 +31,6 @@ impl Default for Asteroid {
 pub struct AsteroidBundle {
     physics: PhysicsBundle,
     render: LyonRenderBundle,
-    replication: Replication,
 }
 
 impl Default for AsteroidBundle {
@@ -41,13 +39,12 @@ impl Default for AsteroidBundle {
             physics: Default::default(),
             render: LyonRenderBundle {
                 shape_render: ShapeBundle {
-                    path: get_path_from_verts(ROID_PATH.to_vec(), 48.0),
+                    path: get_path_from_verts(ROID_PATH.to_vec(), Vec2::splat(48.0)),
                     ..default()
                 },
                 stroke: Stroke::new(Color::ALICE_BLUE, 2.0),
                 ..Default::default()
             },
-            replication: Default::default(),
         }
     }
 }
@@ -83,7 +80,7 @@ pub fn asteroid_spawn(
         cmds.entity(ent)
             .insert(AsteroidBundle::from((
                 *transform,
-                get_path_from_verts(roid_path, asteroid.scale),
+                get_path_from_verts(roid_path, Vec2::splat(asteroid.scale)),
             )))
             .insert(Name::new("Asteroid"));
     });

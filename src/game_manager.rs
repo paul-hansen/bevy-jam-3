@@ -1,10 +1,11 @@
 use std::f32::consts::PI;
 
 use bevy::prelude::*;
-use bevy_replicon::renet::RenetServer;
+use bevy_replicon::{renet::RenetServer, replication_core::Replication};
 use rand::Rng;
 
 use crate::{
+    arena::{Arena, Force},
     asteroid::{asteroid_spawn, Asteroid},
     bundles::lyon_rendering::roid_paths::RoidPath,
 };
@@ -43,10 +44,20 @@ pub fn main_menu_state(mut next_state: ResMut<NextState<GameState>>) {
 }
 
 ///Should only be run by the server, and then fill backfill on the clients
-pub fn build_level(mut cmds: Commands, server_resource: Option<Res<RenetServer>>) {
+pub fn build_level(mut cmds: Commands, server_resource: Option<Res<RenetServer>>, time: Res<Time>) {
     if server_resource.is_none() {
         return;
     }
+
+    let arena_size = Vec2::new(600.0, 400.0);
+    cmds.spawn(Arena {
+        starting_size: arena_size,
+        current_size: arena_size,
+        time_spawned: time.elapsed_seconds(),
+        friendly_force: Force::None,
+    })
+    .insert(Name::new("Arena"))
+    .insert(Replication::default());
 
     let mut rng = rand::thread_rng();
     for _ in 0..5 {
@@ -68,6 +79,7 @@ pub fn build_level(mut cmds: Commands, server_resource: Option<Res<RenetServer>>
                 path: roid_path,
             },
             transform,
+            Replication::default(),
         ));
     }
 }

@@ -115,7 +115,7 @@ impl PlayerBundle {
         Self {
             lyon: LyonRenderBundle {
                 shape_render: ShapeBundle {
-                    path: get_path_from_verts(SHIP_PATH.to_vec(), 32.),
+                    path: get_path_from_verts(SHIP_PATH.to_vec(), Vec2::splat(32.)),
                     transform: Transform::from_xyz(
                         0.0,
                         0.0,

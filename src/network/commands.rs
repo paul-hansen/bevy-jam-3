@@ -22,7 +22,7 @@ impl<'w, 's> NetworkCommandsExt for Commands<'w, 's> {
     }
 
     fn listen(&mut self, ip: IpAddr, bind: IpAddr, port: u16) {
-        self.add(Listen { bind, port, ip: ip });
+        self.add(Listen { bind, port, ip });
     }
 }
 

@@ -8,6 +8,7 @@ mod cli;
 use crate::cli::CliPlugin;
 use crate::network::NetworkPlugin;
 use crate::player::PlayerPlugin;
+use arena::ArenaPlugin;
 use bevy::core_pipeline::bloom::{BloomCompositeMode, BloomSettings};
 use bevy::core_pipeline::clear_color::ClearColorConfig;
 use bevy::core_pipeline::tonemapping::{DebandDither, Tonemapping};
@@ -16,12 +17,14 @@ use bevy_prototype_lyon::prelude::ShapePlugin;
 use bevy_rapier2d::prelude::{NoUserData, RapierPhysicsPlugin};
 use game_manager::GameManager;
 
+mod arena;
 mod asteroid;
 mod bundles;
 mod constructed_geometry;
 mod game_manager;
 mod network;
 mod player;
+
 fn main() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins);
@@ -38,6 +41,7 @@ fn main() {
         .add_plugin(ShapePlugin)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
         .add_plugin(GameManager)
+        .add_plugin(ArenaPlugin)
         .insert_resource(Msaa::Sample8)
         .add_startup_system(setup);
 

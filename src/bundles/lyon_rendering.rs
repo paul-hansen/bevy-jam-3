@@ -22,7 +22,7 @@ impl Default for LyonRenderBundle {
     fn default() -> Self {
         Self {
             shape_render: ShapeBundle {
-                path: get_path_from_verts(SHIP_PATH.to_vec(), 32.),
+                path: get_path_from_verts(SHIP_PATH.to_vec(), Vec2::splat(32.)),
                 transform: Transform::from_xyz(0.0, 0.0, 0.5),
                 ..default()
             },
@@ -32,7 +32,7 @@ impl Default for LyonRenderBundle {
     }
 }
 
-pub fn get_path_from_verts(points: Vec<(f32, f32)>, scale: f32) -> Path {
+pub fn get_path_from_verts(points: Vec<(f32, f32)>, scale: Vec2) -> Path {
     let mut path_builder = PathBuilder::new();
 
     for point in points {
@@ -45,7 +45,7 @@ pub fn get_path_from_verts(points: Vec<(f32, f32)>, scale: f32) -> Path {
 pub fn spawn_test_renders(mut commands: Commands) {
     commands.spawn(LyonRenderBundle {
         shape_render: ShapeBundle {
-            path: get_path_from_verts(roid_paths::ROID_PATH.to_vec(), 48.0),
+            path: get_path_from_verts(roid_paths::ROID_PATH.to_vec(), Vec2::splat(48.0)),
             transform: Transform::from_xyz(0.0, 200.0, 0.1),
             ..default()
         },
@@ -54,7 +54,7 @@ pub fn spawn_test_renders(mut commands: Commands) {
 
     commands.spawn(LyonRenderBundle {
         shape_render: ShapeBundle {
-            path: get_path_from_verts(roid_paths::ROID_PATH2.to_vec(), 48.0),
+            path: get_path_from_verts(roid_paths::ROID_PATH2.to_vec(), Vec2::splat(48.0)),
             transform: Transform::from_xyz(150.0, 200.0, 0.1),
             ..default()
         },
