@@ -22,10 +22,10 @@ mod arena;
 mod asteroid;
 mod bundles;
 mod constructed_geometry;
+mod forms;
 mod game_manager;
 mod network;
 mod player;
-mod forms;
 
 fn main() {
     let mut app = App::new();
