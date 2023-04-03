@@ -1,21 +1,8 @@
 use bevy::prelude::*;
-use bevy_rapier2d::na::ComplexField;
 use rand::Rng;
 
 pub trait PointDistribution {
     fn point(&self) -> Vec2;
-}
-
-pub enum Shape {
-    Circle(CircleShape, Vec2),
-    Quad(QuadShape, Vec2),
-    Arc(ArcSectionShape, Vec2),
-}
-
-pub struct ArcSectionShape {
-    pub arc_length: f32, // Radians
-    pub arc_angle: f32,  // Radians
-    pub angle: f32,      // Radians
 }
 
 pub struct CircleShape {
@@ -27,7 +14,7 @@ impl PointDistribution for CircleShape {
     fn point(&self) -> Vec2 {
         let mut rng = rand::thread_rng();
 
-        let theta = rng.gen_range(0. ..6.29);
+        let theta: f32 = rng.gen_range(0. ..6.29);
         let (sin, cos) = theta.sin_cos();
 
         let mut e_radius = 0.;
@@ -36,7 +23,7 @@ impl PointDistribution for CircleShape {
             e_radius = exclude_radius;
         }
 
-        let mut translation = rng.gen_range(0. ..1.);
+        let mut translation: f32 = rng.gen_range(0. ..1.);
         translation = ((self.radius - e_radius) * translation.sqrt()) + e_radius;
 
         Vec2 {
