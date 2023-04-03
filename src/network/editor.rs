@@ -1,15 +1,17 @@
+use crate::game_manager::GameState;
 use bevy::app::{App, Plugin};
 use bevy::ecs::system::SystemState;
 use bevy::prelude::*;
 use bevy_editor_pls::editor_window::{EditorWindow, EditorWindowContext};
 use bevy_editor_pls::egui::Ui;
 use bevy_editor_pls::AddEditorWindow;
+use bevy_inspector_egui::bevy_inspector::ui_for_state;
 use bevy_replicon::prelude::*;
 use renet_visualizer::{RenetClientVisualizer, RenetServerVisualizer, RenetVisualizerStyle};
 
-pub struct RenetEditorWindow;
+pub struct EditorExtensionPlugin;
 
-impl Plugin for RenetEditorWindow {
+impl Plugin for EditorExtensionPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(RenetClientVisualizer::<200>::new(
             RenetVisualizerStyle::default(),
@@ -17,9 +19,12 @@ impl Plugin for RenetEditorWindow {
         app.insert_resource(RenetServerVisualizer::<200>::new(
             RenetVisualizerStyle::default(),
         ));
-        app.add_editor_window::<Self>();
+        app.add_editor_window::<RenetEditorWindow>();
+        app.add_editor_window::<GameStateEditorWindow>();
     }
 }
+
+pub struct RenetEditorWindow;
 
 impl EditorWindow for RenetEditorWindow {
     type State = ();
@@ -56,5 +61,16 @@ fn server_ui<const N: usize>(
 
             server_visualizer.draw_client_metrics(client_id, ui);
         });
+    }
+}
+
+pub struct GameStateEditorWindow;
+
+impl EditorWindow for GameStateEditorWindow {
+    type State = ();
+    const NAME: &'static str = "GameState";
+
+    fn ui(world: &mut World, _cx: EditorWindowContext, ui: &mut Ui) {
+        ui_for_state::<GameState>(world, ui);
     }
 }

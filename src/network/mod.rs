@@ -93,7 +93,7 @@ impl Plugin for NetworkPlugin {
         );
 
         #[cfg(feature = "bevy_editor_pls")]
-        app.add_plugin(editor::RenetEditorWindow);
+        app.add_plugin(editor::EditorExtensionPlugin);
     }
 }
 

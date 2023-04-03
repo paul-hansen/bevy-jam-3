@@ -1,8 +1,13 @@
 use std::f32::consts::PI;
 
 use bevy::prelude::*;
-use bevy_replicon::{renet::RenetServer, replication_core::Replication};
+use bevy_egui::EguiContexts;
+use bevy_replicon::renet::RenetServer;
+use bevy_replicon::replication_core::Replication;
+use egui::{Align2};
 use rand::Rng;
+
+use crate::forms::{ConnectForm, ListenForm};
 
 use crate::{
     arena::{Arena, Force},
@@ -10,7 +15,8 @@ use crate::{
     bundles::lyon_rendering::roid_paths::RoidPath,
 };
 
-#[derive(Debug, Hash, Eq, PartialEq, Clone, States, Default)]
+#[derive(Debug, Hash, Eq, PartialEq, Clone, States, Default, Reflect)]
+#[reflect(Default)]
 pub enum GameState {
     #[default]
     Loading,
@@ -26,7 +32,7 @@ impl Plugin for GameManager {
     fn build(&self, app: &mut App) {
         app.add_state::<GameState>();
         app.add_systems((load_state,).in_schedule(OnEnter(GameState::Loading)));
-        app.add_systems((main_menu_state,).in_schedule(OnEnter(GameState::MainMenu)));
+        app.add_systems((draw_main_menu,).in_set(OnUpdate(GameState::MainMenu)));
         app.add_systems((build_level,).in_schedule(OnEnter(GameState::Playing)));
 
         app.add_systems((asteroid_spawn,));
@@ -38,9 +44,35 @@ pub fn load_state(mut next_state: ResMut<NextState<GameState>>) {
     next_state.set(GameState::MainMenu);
 }
 
-pub fn main_menu_state(mut next_state: ResMut<NextState<GameState>>) {
-    info!("Auto-Advancing to PreGame State");
-    next_state.set(GameState::PreGame);
+pub fn draw_main_menu(
+    mut commands: Commands,
+    mut contexts: EguiContexts,
+    mut connect_form: Local<ConnectForm>,
+    mut listen_form: Local<ListenForm>,
+) {
+    egui::Window::new("Main Menu")
+        .auto_sized()
+        .collapsible(false)
+        .anchor(Align2::CENTER_CENTER, (0.0, 0.0))
+        .show(contexts.ctx_mut(), |ui| {
+            ui.heading("Join Game");
+            connect_form.draw(ui);
+            if ui.button("Join").clicked() {
+                if let Ok(connect) = connect_form.validate() {
+                    commands.add(connect);
+                }
+            }
+            ui.add_space(14.0);
+            ui.push_id("host", |ui| {
+                ui.heading("Host Game");
+                listen_form.draw(ui);
+                if ui.button("Host").clicked() {
+                    if let Ok(listen) = listen_form.validate() {
+                        commands.add(listen);
+                    }
+                }
+            });
+        });
 }
 
 ///Should only be run by the server, and then fill backfill on the clients

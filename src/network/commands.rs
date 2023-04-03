@@ -1,4 +1,5 @@
-use crate::network::{NetworkOwner, MAX_CLIENTS, PROTOCOL_ID};
+use crate::game_manager::GameState;
+use crate::network::{NetworkOwner, DEFAULT_PORT, MAX_CLIENTS, PROTOCOL_ID};
 use crate::player::commands::SpawnPlayer;
 use crate::player::PlayerColor;
 use bevy::ecs::system::{Command, SystemState};
@@ -8,7 +9,7 @@ use bevy_replicon::prelude::*;
 use bevy_replicon::renet::{
     ClientAuthentication, RenetConnectionConfig, ServerAuthentication, ServerConfig,
 };
-use std::net::{IpAddr, SocketAddr, UdpSocket};
+use std::net::{IpAddr, Ipv4Addr, SocketAddr, UdpSocket};
 use std::time::SystemTime;
 
 pub trait NetworkCommandsExt {
@@ -26,10 +27,21 @@ impl<'w, 's> NetworkCommandsExt for Commands<'w, 's> {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct Connect {
     pub bind: IpAddr,
     pub ip: IpAddr,
     pub port: u16,
+}
+
+impl Default for Connect {
+    fn default() -> Self {
+        Self {
+            bind: Ipv4Addr::new(0, 0, 0, 0).into(),
+            ip: Ipv4Addr::new(127, 0, 0, 1).into(),
+            port: DEFAULT_PORT,
+        }
+    }
 }
 
 impl Command for Connect {
@@ -64,6 +76,9 @@ impl Command for Connect {
 
             RenetClient::new(current_time, socket, connection_config, authentication).unwrap()
         };
+        world
+            .resource_mut::<NextState<GameState>>()
+            .set(GameState::PreGame);
         world.insert_resource(client);
     }
 }
@@ -108,6 +123,9 @@ impl Command for Listen {
             RenetServer::new(current_time, server_config, connection_config, socket).unwrap()
         };
         world.insert_resource(server);
+        world
+            .resource_mut::<NextState<GameState>>()
+            .set(GameState::PreGame);
         SpawnPlayer {
             color: PlayerColor::get(0),
             network_owner: NetworkOwner(SERVER_ID),
