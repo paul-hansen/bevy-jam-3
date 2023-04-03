@@ -4,11 +4,12 @@ use bevy::prelude::*;
 use bevy_egui::EguiContexts;
 use bevy_replicon::renet::RenetServer;
 use bevy_replicon::replication_core::Replication;
-use egui::{Align2};
+use egui::Align2;
 use rand::Rng;
 
 use crate::forms::{ConnectForm, ListenForm};
 
+use crate::network::NetworkInfo;
 use crate::{
     arena::{Arena, Force},
     asteroid::{asteroid_spawn, Asteroid},
@@ -49,7 +50,13 @@ pub fn draw_main_menu(
     mut contexts: EguiContexts,
     mut connect_form: Local<ConnectForm>,
     mut listen_form: Local<ListenForm>,
+    network_info: Res<NetworkInfo>,
 ) {
+    if network_info.is_changed() {
+        if let Some(ip) = network_info.public_ip {
+            listen_form.ip = ip.to_string();
+        }
+    }
     egui::Window::new("Main Menu")
         .auto_sized()
         .collapsible(false)
