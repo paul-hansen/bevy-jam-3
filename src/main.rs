@@ -15,6 +15,7 @@ use bevy::core_pipeline::tonemapping::{DebandDither, Tonemapping};
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::ShapePlugin;
 use bevy_rapier2d::prelude::{NoUserData, RapierPhysicsPlugin};
+use bevy_rapier2d::render::RapierDebugRenderPlugin;
 use game_manager::GameManager;
 
 mod arena;
@@ -40,6 +41,7 @@ fn main() {
         .add_plugin(NetworkPlugin)
         .add_plugin(ShapePlugin)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
+        .add_plugin(RapierDebugRenderPlugin::default())
         .add_plugin(GameManager)
         .add_plugin(ArenaPlugin)
         .add_plugin(CliPlugin)

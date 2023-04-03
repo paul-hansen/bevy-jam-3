@@ -31,10 +31,6 @@ pub struct Arena {
     pub friendly_force: Force,
 }
 
-///Bundle to be added to a replicated component after the server has spawned it
-#[derive(Bundle)]
-pub struct ArenaEnrichBundle {}
-
 pub fn spawn_arena(mut cmds: Commands, arenas: Query<(&Arena, Entity), Added<Arena>>) {
     arenas.iter().for_each(|(arena, ent)| {
         info!("Enriching spawned Arena");
@@ -46,7 +42,6 @@ pub fn spawn_arena(mut cmds: Commands, arenas: Query<(&Arena, Entity), Added<Are
                 },
                 ..default()
             })
-            .insert(ArenaEnrichBundle {})
             .insert(Name::new("Arena Boundary"))
             .id();
 
