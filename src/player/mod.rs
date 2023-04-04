@@ -111,6 +111,7 @@ impl PlayerColor {
 
 #[derive(Bundle, Default)]
 pub struct PlayerBundle {
+    name: Name,
     lyon: LyonRenderBundle,
     replication: Replication,
     action_state: ActionState<PlayerAction>,
@@ -119,6 +120,7 @@ pub struct PlayerBundle {
 impl PlayerBundle {
     fn with_color(color: PlayerColor) -> Self {
         Self {
+            name: Name::new(format!("Player {:?}", color)),
             lyon: LyonRenderBundle {
                 shape_render: ShapeBundle {
                     path: get_path_from_verts(SHIP_PATH.to_vec(), Vec2::splat(32.)),
