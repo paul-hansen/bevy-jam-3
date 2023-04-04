@@ -40,7 +40,7 @@ impl Default for AsteroidBundle {
             physics: Default::default(),
             render: LyonRenderBundle {
                 shape_render: ShapeBundle {
-                    path: get_path_from_verts(ROID_PATH.to_vec(), Vec2::splat(48.0)),
+                    path: get_path_from_verts(&ROID_PATH, Vec2::splat(48.0)),
                     ..default()
                 },
                 stroke: Stroke::new(Color::ALICE_BLUE, 2.0),
@@ -86,7 +86,7 @@ pub fn asteroid_spawn(
                 },
                 ..AsteroidBundle::from((
                     *transform,
-                    get_path_from_verts(roid_path, Vec2::splat(asteroid.scale)),
+                    get_path_from_verts(&roid_path, Vec2::splat(asteroid.scale)),
                 ))
             })
             .insert(Name::new("Asteroid"));

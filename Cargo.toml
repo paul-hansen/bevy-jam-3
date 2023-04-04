@@ -13,7 +13,6 @@ leafwing-input-manager = "0.9.1"
 surf = "2.3.2"
 bevy_prototype_lyon = "0.8.0"
 renet_visualizer = { version = "0.0.4", features = ["bevy"] }
-lazy_static = "1.4.0"
 serde = { version = "1.0.159", features = ["derive"] }
 bevy_rapier2d = {version = "0.21.0", features = ["enhanced-determinism", "debug-render-2d"]}
 rand = {version = "0.8.5"}

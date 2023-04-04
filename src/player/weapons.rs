@@ -111,7 +111,7 @@ impl Default for LaserBundle {
     fn default() -> Self {
         let lyon = LyonRenderBundle {
             shape_render: ShapeBundle {
-                path: get_path_from_verts(LASER_PATH.to_vec(), Vec2::splat(2.0)),
+                path: get_path_from_verts(&LASER_PATH, Vec2::splat(2.0)),
                 ..default()
             },
             ..default()

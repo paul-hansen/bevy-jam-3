@@ -922,7 +922,6 @@ dependencies = [
  "clap",
  "egui",
  "futures-lite",
- "lazy_static",
  "leafwing-input-manager",
  "rand 0.8.5",
  "renet_visualizer",
