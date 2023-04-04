@@ -1,4 +1,3 @@
-use crate::bundles::PhysicsBundle;
 use crate::network::NetworkOwner;
 use crate::player::weapons::Weapon;
 use crate::player::{Player, PlayerAction, PlayerColor};
