@@ -21,7 +21,8 @@ impl Plugin for WeaponsPlugin {
         app.replicate::<Laser>();
         app.add_system(fire_weapon_action.in_set(ServerSet::Authority));
         app.add_system(update_lasers);
-        app.add_system(despawn_oldest_if_exceed_count::<30, Laser>);
+        app.add_system(despawn_oldest_if_exceed_count::<30, Laser>.in_set(ServerSet::Authority));
+        app.add_system(despawn_after_milliseconds::<800, Laser>.in_set(ServerSet::Authority));
         app.add_system(spawn_bundle_default_on_added::<Laser, LaserBundle>);
     }
 }
@@ -74,9 +75,7 @@ impl Weapon {
                         Replication,
                         Laser,
                         SpatialBundle::from_transform(transform),
-                        Age {
-                            spawned_at: time.elapsed_seconds_wrapped(),
-                        },
+                        SpawnTime(time.elapsed_seconds_wrapped()),
                     ));
                     self.last_fire = time.elapsed_seconds_wrapped();
                 }
@@ -130,15 +129,25 @@ impl Default for LaserBundle {
     }
 }
 
-#[derive(Component, Reflect, Default, Copy, Clone, Debug, PartialOrd, PartialEq)]
-#[reflect(Component, Default)]
-pub struct Age {
-    spawned_at: f32,
+/// Record of the elapsed time this component was spawned
+#[derive(Component, Reflect, Copy, Clone, Debug, PartialOrd, PartialEq)]
+#[reflect(Component)]
+pub struct SpawnTime(pub f32);
+
+impl FromWorld for SpawnTime {
+    fn from_world(world: &mut World) -> Self {
+        let time = world.resource::<Time>();
+        Self(time.elapsed_seconds_wrapped())
+    }
 }
 
+/// Limits the number of entities that can exist in the world at a time with the given component.
+/// Will despawn the oldest as needed to enforce this.
+/// Useful for limiting entities we are replicating like bullets where we don't want too many.
+/// Entities must have the [`SpawnTime`] component.
 fn despawn_oldest_if_exceed_count<const MAX: usize, C: Component>(
     mut commands: Commands,
-    query: Query<(Entity, &Age), With<C>>,
+    query: Query<(Entity, &SpawnTime), With<C>>,
 ) {
     if query.iter().count() > MAX {
         let mut all = query.iter().collect::<Vec<_>>();
@@ -146,5 +155,17 @@ fn despawn_oldest_if_exceed_count<const MAX: usize, C: Component>(
         all[MAX..]
             .iter()
             .for_each(|(entity, _)| commands.entity(*entity).despawn_recursive());
+    }
+}
+
+fn despawn_after_milliseconds<const MILLISECONDS: usize, C: Component>(
+    mut commands: Commands,
+    query: Query<(Entity, &SpawnTime), With<C>>,
+    time: Res<Time>,
+) {
+    for (entity, spawn_time) in query.iter() {
+        if ((time.elapsed_seconds_wrapped() - spawn_time.0) * 1000.0) as usize > MILLISECONDS {
+            commands.entity(entity).despawn_recursive();
+        }
     }
 }
