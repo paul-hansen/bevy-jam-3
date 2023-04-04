@@ -13,6 +13,7 @@ use bevy::core_pipeline::bloom::{BloomCompositeMode, BloomSettings};
 use bevy::core_pipeline::clear_color::ClearColorConfig;
 use bevy::core_pipeline::tonemapping::{DebandDither, Tonemapping};
 use bevy::prelude::*;
+use bevy_egui::EguiPlugin;
 use bevy_prototype_lyon::prelude::ShapePlugin;
 use bevy_rapier2d::prelude::{DebugRenderContext, NoUserData, RapierPhysicsPlugin};
 use bevy_rapier2d::render::RapierDebugRenderPlugin;
@@ -49,6 +50,10 @@ fn main() {
         .add_plugin(ArenaPlugin)
         .add_plugin(CliPlugin)
         .insert_resource(Msaa::Sample8);
+
+    if !app.is_plugin_added::<EguiPlugin>() {
+        app.add_plugin(EguiPlugin);
+    }
 
     app.add_startup_system(setup);
     app.add_system(debug_rapier);
