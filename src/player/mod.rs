@@ -6,7 +6,7 @@ use crate::bundles::lyon_rendering::{get_path_from_verts, LyonRenderBundle};
 use crate::game_manager::GameState;
 use crate::network::NetworkOwner;
 use crate::player::commands::PlayerCommands;
-use crate::player::weapons::{Weapon, WeaponsPlugin};
+use crate::player::weapons::WeaponsPlugin;
 use bevy::math::Vec3Swizzles;
 use bevy::prelude::*;
 use bevy_prototype_lyon::draw::Stroke;

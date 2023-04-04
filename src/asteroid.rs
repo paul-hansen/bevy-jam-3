@@ -79,8 +79,8 @@ pub fn asteroid_spawn(
         };
 
         cmds.entity(ent)
-            .insert(AsteroidBundle{
-                physics: PhysicsBundle{
+            .insert(AsteroidBundle {
+                physics: PhysicsBundle {
                     collider: Collider::cuboid(asteroid.scale * 0.5, asteroid.scale * 0.5),
                     ..Default::default()
                 },

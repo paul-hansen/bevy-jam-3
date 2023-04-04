@@ -12,9 +12,7 @@ use crate::player::{Player, PlayerAction};
 use bevy::prelude::*;
 use bevy::tasks::{AsyncComputeTaskPool, Task};
 use bevy_replicon::prelude::{AppReplicationExt, ClientEventAppExt, FromClient};
-use bevy_replicon::renet::{
-    ChannelConfig, ReliableChannelConfig, ServerEvent, UnreliableChannelConfig,
-};
+use bevy_replicon::renet::ServerEvent;
 use bevy_replicon::ReplicationPlugins;
 use futures_lite::future;
 use leafwing_input_manager::action_state::{ActionDiff, ActionState};
@@ -158,22 +156,4 @@ fn log_network_events(mut events: EventReader<ServerEvent>) {
     for event in events.iter() {
         info!("{event:?}");
     }
-}
-
-pub fn channel_configs(events_count: u8) -> Vec<ChannelConfig> {
-    let mut channel_configs = Vec::with_capacity((events_count + 1).into());
-    channel_configs.push(ChannelConfig::Unreliable(UnreliableChannelConfig {
-        channel_id: 0,
-        sequenced: true,
-        max_message_size: 30000,
-        ..Default::default()
-    }));
-    for channel_id in 1..=events_count {
-        channel_configs.push(ChannelConfig::Reliable(ReliableChannelConfig {
-            channel_id,
-            max_message_size: 30000,
-            ..Default::default()
-        }));
-    }
-    channel_configs
 }
