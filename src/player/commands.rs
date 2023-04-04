@@ -1,5 +1,6 @@
 use crate::bundles::PhysicsBundle;
 use crate::network::NetworkOwner;
+use crate::player::weapons::Weapon;
 use crate::player::{Player, PlayerAction, PlayerColor};
 use bevy::ecs::system::{Command, Spawn};
 use bevy::prelude::{Commands, World};
@@ -20,6 +21,7 @@ impl Command for SpawnPlayer {
                 Replication,
                 ActionState::<PlayerAction>::default(),
                 PhysicsBundle::default(),
+                Weapon::default(),
             ),
         }
         .write(world);

@@ -37,8 +37,8 @@ fn main() {
         app.add_plugin(EditorPlugin::default());
     }
 
-    app.add_plugin(PlayerPlugin)
-        .add_plugin(NetworkPlugin)
+    app.add_plugin(NetworkPlugin)
+        .add_plugin(PlayerPlugin)
         .add_plugin(ShapePlugin)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
         .add_plugin(RapierDebugRenderPlugin::default())

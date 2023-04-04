@@ -80,6 +80,14 @@ pub mod ship_paths {
     }
 }
 
+pub mod projectile_paths {
+    use lazy_static::lazy_static;
+
+    lazy_static! {
+        pub static ref LASER_PATH: Vec<(f32, f32)> = vec![(0.0, 0.0), (0.0, 10.0),];
+    }
+}
+
 pub mod roid_paths {
     use bevy::reflect::Reflect;
     use lazy_static::lazy_static;

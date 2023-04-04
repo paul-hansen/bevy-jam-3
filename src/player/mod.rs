@@ -1,10 +1,12 @@
 pub mod commands;
+pub mod weapons;
 
 use crate::bundles::lyon_rendering::ship_paths::SHIP_PATH;
 use crate::bundles::lyon_rendering::{get_path_from_verts, LyonRenderBundle};
 use crate::game_manager::GameState;
 use crate::network::NetworkOwner;
 use crate::player::commands::PlayerCommands;
+use crate::player::weapons::{Weapon, WeaponsPlugin};
 use bevy::math::Vec3Swizzles;
 use bevy::prelude::*;
 use bevy_prototype_lyon::draw::Stroke;
@@ -20,6 +22,7 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(InputManagerPlugin::<PlayerAction>::default());
+        app.add_plugin(WeaponsPlugin);
         app.register_type::<PlayerColor>();
         app.register_type::<Player>();
         app.add_systems(
@@ -59,6 +62,9 @@ impl PlayerAction {
         );
         input_map.insert(KeyCode::W, Self::Thrust);
         input_map.insert(KeyCode::Up, Self::Thrust);
+        input_map.insert(KeyCode::Space, Self::Shoot);
+        input_map.insert(GamepadButtonType::South, Self::Shoot);
+        input_map.insert(GamepadButtonType::RightTrigger2, Self::Shoot);
         input_map
     }
 }
