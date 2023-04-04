@@ -14,7 +14,7 @@ use bevy::core_pipeline::clear_color::ClearColorConfig;
 use bevy::core_pipeline::tonemapping::{DebandDither, Tonemapping};
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::ShapePlugin;
-use bevy_rapier2d::prelude::{NoUserData, RapierPhysicsPlugin};
+use bevy_rapier2d::prelude::{DebugRenderContext, NoUserData, RapierPhysicsPlugin};
 use bevy_rapier2d::render::RapierDebugRenderPlugin;
 use game_manager::GameManager;
 
@@ -41,13 +41,17 @@ fn main() {
         .add_plugin(PlayerPlugin)
         .add_plugin(ShapePlugin)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
-        .add_plugin(RapierDebugRenderPlugin::default())
+        .add_plugin(RapierDebugRenderPlugin {
+            enabled: false,
+            ..default()
+        })
         .add_plugin(GameManager)
         .add_plugin(ArenaPlugin)
         .add_plugin(CliPlugin)
         .insert_resource(Msaa::Sample8);
 
     app.add_startup_system(setup);
+    app.add_system(debug_rapier);
     app.run();
 }
 
@@ -70,4 +74,10 @@ fn setup(mut commands: Commands) {
             ..default()
         },
     ));
+}
+
+fn debug_rapier(mut debug_context: ResMut<DebugRenderContext>, keycodes: Res<Input<KeyCode>>) {
+    if keycodes.just_released(KeyCode::F7) {
+        debug_context.enabled = !debug_context.enabled;
+    }
 }
