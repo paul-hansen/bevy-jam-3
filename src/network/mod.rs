@@ -11,7 +11,8 @@ use crate::bundles::lyon_rendering::roid_paths::RoidPath;
 use crate::player::{Player, PlayerAction};
 use bevy::prelude::*;
 use bevy::tasks::{AsyncComputeTaskPool, Task};
-use bevy_replicon::prelude::{AppReplicationExt, ClientEventAppExt, FromClient};
+use bevy_rapier2d::prelude::Velocity;
+use bevy_replicon::prelude::*;
 use bevy_replicon::renet::ServerEvent;
 use bevy_replicon::ReplicationPlugins;
 use futures_lite::future;
@@ -84,13 +85,18 @@ pub struct NetworkPlugin;
 impl Plugin for NetworkPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<NetworkInfo>();
-        app.add_plugins(ReplicationPlugins);
+        app.add_plugins(
+            ReplicationPlugins
+                .build()
+                .set(ServerPlugin { tick_rate: 30 }),
+        );
         app.register_type::<NetworkOwner>();
         app.register_type::<RoidPath>();
         app.replicate::<Transform>();
         app.replicate::<Player>();
         app.replicate::<NetworkOwner>();
         app.replicate::<Asteroid>();
+        app.replicate::<Velocity>();
         app.add_system(log_network_events);
         app.add_client_event::<ActionDiff<PlayerAction, NetworkOwner>>();
         app.add_system(

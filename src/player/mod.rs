@@ -3,6 +3,7 @@ pub mod weapons;
 
 use crate::bundles::lyon_rendering::ship_paths::SHIP_PATH;
 use crate::bundles::lyon_rendering::{get_path_from_verts, LyonRenderBundle};
+use crate::bundles::PhysicsBundle;
 use crate::game_manager::GameState;
 use crate::network::NetworkOwner;
 use crate::player::commands::PlayerCommands;
@@ -115,6 +116,7 @@ pub struct PlayerBundle {
     lyon: LyonRenderBundle,
     replication: Replication,
     action_state: ActionState<PlayerAction>,
+    physics: PhysicsBundle,
 }
 
 impl PlayerBundle {

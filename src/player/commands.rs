@@ -20,7 +20,6 @@ impl Command for SpawnPlayer {
                 self.network_owner,
                 Replication,
                 ActionState::<PlayerAction>::default(),
-                PhysicsBundle::default(),
                 Weapon::default(),
             ),
         }
