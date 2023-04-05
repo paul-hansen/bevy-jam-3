@@ -1,5 +1,7 @@
 use bevy::prelude::*;
+use bevy::sprite::Mesh2dHandle;
 use bevy_prototype_lyon::prelude::{Fill, Path, PathBuilder, ShapeBundle, Stroke};
+use bevy_prototype_lyon::render::ShapeMaterial;
 
 use self::ship_paths::SHIP_PATH;
 
@@ -16,6 +18,35 @@ pub struct LyonRenderBundle {
     pub shape_render: ShapeBundle,
     pub stroke: Stroke,
     pub fill: Fill,
+}
+
+/// Bundle that should be added to any clients (including the server if the server is playing)
+/// Same as LyonRenderBundle but without the transform so we can set that when it is spawned.
+#[derive(Bundle)]
+pub struct LyonRenderBundleClient {
+    pub path: Path,
+    pub mesh: Mesh2dHandle,
+    pub material: Handle<ShapeMaterial>,
+    pub global_transform: GlobalTransform,
+    pub visibility: Visibility,
+    pub computed_visibility: ComputedVisibility,
+    pub stroke: Stroke,
+    pub fill: Fill,
+}
+
+impl Default for LyonRenderBundleClient {
+    fn default() -> Self {
+        Self {
+            path: get_path_from_verts(&SHIP_PATH, Vec2::splat(32.)),
+            mesh: Default::default(),
+            material: Default::default(),
+            global_transform: Default::default(),
+            visibility: Default::default(),
+            computed_visibility: Default::default(),
+            stroke: Stroke::new(Color::YELLOW, 3.0),
+            fill: Fill::color(Color::rgba(0., 0., 0., 0.)),
+        }
+    }
 }
 
 impl Default for LyonRenderBundle {

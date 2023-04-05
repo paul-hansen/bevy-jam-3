@@ -99,8 +99,8 @@ impl PlayerColor {
     pub fn get(player_index: usize) -> Self {
         match player_index {
             0 => PlayerColor::Red,
-            1 => PlayerColor::Green,
-            2 => PlayerColor::Blue,
+            1 => PlayerColor::Blue,
+            2 => PlayerColor::Green,
             3 => PlayerColor::Yellow,
             _ => {
                 warn!("Should probably add more colors");
@@ -178,14 +178,18 @@ pub fn pregame_listen_for_player_connect(
 /// Handles inserting the player bundle whenever [`Player`] is added to an entity.
 fn insert_player_bundle(
     mut commands: Commands,
-    query: Query<(Entity, &Player, &NetworkOwner), Added<Player>>,
+    query: Query<(Entity, &Player, &NetworkOwner, &Transform), Added<Player>>,
     client: Option<Res<RenetClient>>,
 ) {
-    for (entity, player, client_id) in query.iter() {
+    for (entity, player, client_id, transform) in query.iter() {
         info!("Inserting Player bundle for new player");
         let player_entity = commands
             .entity(entity)
-            .insert(PlayerBundle::with_color(player.color))
+            .insert({
+                let mut bundle = PlayerBundle::with_color(player.color);
+                bundle.lyon.shape_render.transform = *transform;
+                bundle
+            })
             .id();
 
         if let Some(client) = &client {
