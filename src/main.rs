@@ -13,6 +13,7 @@ use bevy::core_pipeline::bloom::{BloomCompositeMode, BloomSettings};
 use bevy::core_pipeline::clear_color::ClearColorConfig;
 use bevy::core_pipeline::tonemapping::{DebandDither, Tonemapping};
 use bevy::prelude::*;
+use bevy::render::camera::ScalingMode;
 use bevy_egui::EguiPlugin;
 use bevy_prototype_lyon::prelude::ShapePlugin;
 use bevy_rapier2d::prelude::{DebugRenderContext, NoUserData, RapierPhysicsPlugin};
@@ -72,6 +73,13 @@ fn setup(mut commands: Commands) {
             },
             tonemapping: Tonemapping::TonyMcMapface,
             deband_dither: DebandDither::Enabled,
+            projection: OrthographicProjection {
+                scaling_mode: ScalingMode::AutoMin {
+                    min_width: 1920.0,
+                    min_height: 1080.0,
+                },
+                ..default()
+            },
             ..default()
         },
         BloomSettings {
