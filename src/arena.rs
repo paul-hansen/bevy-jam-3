@@ -5,11 +5,16 @@ use crate::{
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::ShapeBundle;
 use bevy_rapier2d::{
-    prelude::{Collider, RapierContext, Sensor},
+    prelude::{Collider, RapierContext, Sensor, QueryFilter},
     rapier::prelude::{CollisionEvent, ContactForceEvent},
 };
 use bevy_replicon::replication_core::AppReplicationExt;
 use serde::{Deserialize, Serialize};
+
+#[derive(
+  Component, Reflect, Debug, Default, Copy, Clone, PartialEq, Eq, Serialize, Deserialize,
+)]
+pub struct OutsideArena;
 
 #[derive(
     Component, Reflect, Debug, Default, Copy, Clone, PartialEq, Eq, Serialize, Deserialize,
@@ -64,21 +69,25 @@ pub fn spawn_arena(mut cmds: Commands, arenas: Query<(&Arena, Entity), Added<Are
 
 /* A system that displays the events. */
 fn display_events(
-
-
-
-
-
     players: Query<(&Player, &Transform)>,
-          arenas: Query<(&Arena, &Collider, &Transform)>,
+    arenas: Query<(&Arena, &Collider, &Transform)>,
     rapier_context: Res<RapierContext>,
+    mut cmds: Commands,
 ) {
-    if let Err(e) = arenas.get_single() {
-        debug!("Could not find arena: {}", e);
+    let Ok((arena, collider, transform)) = arenas.get_single() else {
+        debug!("No Arena Found");
         return;
-    }
+    };
 
-    for (player, p_transform) in players.iter() {}
+    for (player, p_transform) in players.iter() {
+      let pos = Vec2::new(transform.translation.x, transform.translation.y);
+      rapier_context.intersections_with_shape(pos, transform.rotation.xyz().z, collider, QueryFilter::default(), |ent| {
+        
+        true
+      });
+
+      
+    }
 }
 
 pub struct ArenaPlugin;
