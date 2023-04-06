@@ -5,18 +5,16 @@ use crate::{
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::ShapeBundle;
 use bevy_rapier2d::{
-    prelude::{Collider, RapierContext, Sensor, QueryFilter},
+    prelude::{Collider, QueryFilter, RapierContext, Sensor},
     rapier::prelude::{CollisionEvent, ContactForceEvent},
 };
 use bevy_replicon::replication_core::AppReplicationExt;
 use serde::{Deserialize, Serialize};
 
-#[derive(
-  Component, Reflect, Debug, Default, Copy, Clone, Serialize, Deserialize,
-)]
-pub struct ArenaResident{
-  pub is_outside: bool,
-  pub time_exited: f32,
+#[derive(Component, Reflect, Debug, Default, Copy, Clone, Serialize, Deserialize)]
+pub struct ArenaResident {
+    pub is_outside: bool,
+    pub time_exited: f32,
 }
 
 #[derive(
@@ -84,29 +82,32 @@ fn check_arena_residency(
 
     let pos = Vec2::new(transform.translation.x, transform.translation.y);
 
-    arena_residents.iter_mut().for_each(| mut arena_resident|{
-      //If the resident is not outside set the time_exited to the current time, otherwise don't update it after they're already outside
-      if !arena_resident.is_outside {
-        arena_resident.time_exited = time.elapsed_seconds_wrapped();
-      }
+    arena_residents.iter_mut().for_each(|mut arena_resident| {
+        //If the resident is not outside set the time_exited to the current time, otherwise don't update it after they're already outside
+        if !arena_resident.is_outside {
+            arena_resident.time_exited = time.elapsed_seconds_wrapped();
+        }
 
-      //Set all residents to outside until the collider check overrides it
-      arena_resident.is_outside = true;
+        //Set all residents to outside until the collider check overrides it
+        arena_resident.is_outside = true;
     });
 
-    rapier_context.intersections_with_shape(pos, transform.rotation.xyz().z, collider, QueryFilter::default(), |ent| {
-      let Ok(mut arena_resident) = arena_residents.get_mut(ent) else {
+    rapier_context.intersections_with_shape(
+        pos,
+        transform.rotation.xyz().z,
+        collider,
+        QueryFilter::default(),
+        |ent| {
+            let Ok(mut arena_resident) = arena_residents.get_mut(ent) else {
         return true;
       };
 
-      info!("Setting arena_resident to inside: {ent:?}");
-      arena_resident.is_outside = false;
+            info!("Setting arena_resident to inside: {ent:?}");
+            arena_resident.is_outside = false;
 
-      true
-    });
-
-      
-    
+            true
+        },
+    );
 }
 
 pub struct ArenaPlugin;
