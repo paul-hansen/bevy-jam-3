@@ -1,9 +1,12 @@
+use crate::bundles::lyon_rendering::{get_path_from_verts, LyonRenderBundle, UNIT_SQUARE_PATH};
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::ShapeBundle;
-use bevy_rapier2d::{prelude::{Collider, Sensor}, rapier::prelude::{CollisionEvent, ContactForceEvent}};
+use bevy_rapier2d::{
+    prelude::{Collider, Sensor},
+    rapier::prelude::{CollisionEvent, ContactForceEvent},
+};
 use bevy_replicon::replication_core::AppReplicationExt;
 use serde::{Deserialize, Serialize};
-use crate::bundles::lyon_rendering::{get_path_from_verts, LyonRenderBundle, UNIT_SQUARE_PATH};
 
 #[derive(
     Component, Reflect, Debug, Default, Copy, Clone, PartialEq, Eq, Serialize, Deserialize,
@@ -46,27 +49,28 @@ pub fn spawn_arena(mut cmds: Commands, arenas: Query<(&Arena, Entity), Added<Are
 
         cmds.entity(ent)
             .insert(SpatialBundle::from_transform(Transform::from_xyz(
-                0.0,
-                0.0,
-                0.0,
+                0.0, 0.0, 0.0,
             )))
-            .insert((Collider::cuboid(arena.starting_size.x/2.0, arena.starting_size.y/2.0), Sensor))
+            .insert((
+                Collider::cuboid(arena.starting_size.x / 2.0, arena.starting_size.y / 2.0),
+                Sensor,
+            ))
             .add_child(id);
     });
 }
 
 /* A system that displays the events. */
 fn display_events(
-  mut collision_events: EventReader<CollisionEvent>,
-  mut contact_force_events: EventReader<ContactForceEvent>,
+    mut collision_events: EventReader<CollisionEvent>,
+    mut contact_force_events: EventReader<ContactForceEvent>,
 ) {
-  for collision_event in collision_events.iter() {
-      println!("Received collision event: {:?}", collision_event);
-  }
+    for collision_event in collision_events.iter() {
+        println!("Received collision event: {:?}", collision_event);
+    }
 
-  for contact_force_event in contact_force_events.iter() {
-      println!("Received contact force event: {:?}", contact_force_event);
-  }
+    for contact_force_event in contact_force_events.iter() {
+        println!("Received contact force event: {:?}", contact_force_event);
+    }
 }
 
 pub struct ArenaPlugin;

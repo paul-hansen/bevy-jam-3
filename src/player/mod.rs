@@ -1,9 +1,9 @@
 pub mod commands;
 pub mod weapons;
 
-use crate::bundles::PhysicsBundle;
 use crate::bundles::lyon_rendering::ship_paths::SHIP_PATH;
 use crate::bundles::lyon_rendering::{get_path_from_verts, LyonRenderBundle};
+use crate::bundles::PhysicsBundle;
 use crate::game_manager::GameState;
 use crate::network::NetworkOwner;
 use crate::player::commands::PlayerCommands;
