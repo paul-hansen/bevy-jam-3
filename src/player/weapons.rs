@@ -146,8 +146,11 @@ fn detect_laser_hits(
     mut impulses: Query<&mut ExternalImpulse>,
 ) {
     for (laser_entity, transform, owner) in query.iter() {
+        // Start from where the laser would have been the last frame
+        let ray_start = transform.translation().xy()
+            - (transform.down().xy() * time.delta_seconds() * Laser::UNITS_PER_SECOND);
         if let Some((hit_entity, intersection)) = rapier_context.cast_ray_and_get_normal(
-            transform.translation().xy() - transform.down().xy(),
+            ray_start,
             transform.up().xy(),
             Laser::UNITS_PER_SECOND * time.delta_seconds(),
             true,

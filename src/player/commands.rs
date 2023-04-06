@@ -1,3 +1,4 @@
+use crate::health::Health;
 use crate::network::NetworkOwner;
 use crate::player::weapons::Weapon;
 use crate::player::{Player, PlayerAction, PlayerColor};
@@ -24,7 +25,8 @@ impl Command for SpawnPlayer {
 
         Spawn {
             bundle: (
-                Player { color: self.color},
+                Player { color: self.color },
+                Health::default(),
                 self.network_owner,
                 Replication,
                 ActionState::<PlayerAction>::default(),

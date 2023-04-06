@@ -11,6 +11,7 @@ use crate::bundles::{
     },
     PhysicsBundle,
 };
+use crate::health::Health;
 
 #[derive(Component, Reflect, Copy, Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[reflect(Component, Default)]
@@ -78,8 +79,8 @@ pub fn asteroid_spawn(
             RoidPath::Two => ROID_PATH2.to_vec(),
         };
 
-        cmds.entity(ent)
-            .insert(AsteroidBundle {
+        cmds.entity(ent).insert((
+            AsteroidBundle {
                 physics: PhysicsBundle {
                     collider: Collider::cuboid(asteroid.scale * 0.5, asteroid.scale * 0.5),
                     ..Default::default()
@@ -88,7 +89,9 @@ pub fn asteroid_spawn(
                     *transform,
                     get_path_from_verts(&roid_path, Vec2::splat(asteroid.scale)),
                 ))
-            })
-            .insert(Name::new("Asteroid"));
+            },
+            Health::default(),
+            Name::new("Asteroid"),
+        ));
     });
 }
