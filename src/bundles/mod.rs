@@ -31,7 +31,7 @@ impl Default for PhysicsBundle {
             }),
             damping: Damping {
                 linear_damping: 0.2,
-                angular_damping: 0.2,
+                angular_damping: 0.5,
             },
             ex_force: Default::default(),
             ex_impulse: Default::default(),

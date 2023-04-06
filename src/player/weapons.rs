@@ -151,7 +151,7 @@ fn detect_laser_hits(
             transform.up().xy(),
             Laser::UNITS_PER_SECOND * time.delta_seconds(),
             true,
-            QueryFilter::default(),
+            QueryFilter::default().exclude_sensors(),
         ) {
             // This is similar to `QueryPipeline::cast_ray` illustrated above except
             // that it also returns the normal of the collider shape at the hit point.

@@ -3,7 +3,6 @@ use bevy_prototype_lyon::prelude::ShapeBundle;
 use bevy_rapier2d::{prelude::{Collider, Sensor}, rapier::prelude::{CollisionEvent, ContactForceEvent}};
 use bevy_replicon::replication_core::AppReplicationExt;
 use serde::{Deserialize, Serialize};
-use lazy_static::lazy_static;
 use crate::bundles::lyon_rendering::{get_path_from_verts, LyonRenderBundle, UNIT_SQUARE_PATH};
 
 #[derive(
@@ -55,13 +54,6 @@ pub fn spawn_arena(mut cmds: Commands, arenas: Query<(&Arena, Entity), Added<Are
             .add_child(id);
     });
 }
-
-
-lazy_static!{
-    pub static ref ARENA_BOUNDARY: Vec<(f32, f32)> =
-        vec![(0.0, 0.0), (0.0, 1.0), (1.0, 1.0), (1.0, 0.0), (0.0, 0.0)];
-}
-
 
 /* A system that displays the events. */
 fn display_events(

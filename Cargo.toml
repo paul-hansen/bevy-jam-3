@@ -20,7 +20,6 @@ bevy_egui = "0.20"
 egui = "0.21"
 bevy-inspector-egui = "0.18"
 futures-lite = "1.12.0"
-lazy_static="1.4.0"
 # Enable a small amount of optimization in debug mode
 [profile.dev]
 opt-level = 1
