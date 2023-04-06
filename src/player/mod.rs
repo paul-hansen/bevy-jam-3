@@ -19,6 +19,8 @@ use bevy_replicon::renet::{RenetClient, ServerEvent};
 use leafwing_input_manager::prelude::*;
 use serde::{Deserialize, Serialize};
 
+use self::weapons::DamagedEvent;
+
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
@@ -28,7 +30,12 @@ impl Plugin for PlayerPlugin {
         app.register_type::<PlayerColor>();
         app.register_type::<Player>();
         app.add_systems(
-            (player_actions, spawn_player_on_connected).in_set(OnUpdate(GameState::Playing)),
+            (
+                player_actions,
+                spawn_player_on_connected,
+                damage_players_outside_arena,
+            )
+                .in_set(OnUpdate(GameState::Playing)),
         );
         app.add_systems((pregame_listen_for_player_connect,).in_set(OnUpdate(GameState::PreGame)));
         app.add_system(insert_player_bundle);
@@ -177,6 +184,29 @@ pub fn pregame_listen_for_player_connect(
     }
 }
 
+pub fn damage_players_outside_arena(
+    server: Option<Res<RenetServer>>,
+    players: Query<(&ArenaResident, Entity), With<Player>>,
+    mut dmg_events: EventWriter<DamagedEvent>,
+    time: Res<Time>,
+) {
+    if server.is_none() {
+        return;
+    }
+    info!("{}", players.iter().len());
+    players.iter().for_each(|(arena_resident, entity)| {
+        if arena_resident.is_outside {
+            dmg_events.send(DamagedEvent {
+                entity,
+                amount: 34.0 * time.delta().as_secs_f32(),
+                normal: None,
+                direction: None,
+                point: None,
+            })
+        }
+    })
+}
+
 /// Handles inserting the player bundle whenever [`Player`] is added to an entity.
 fn insert_player_bundle(
     mut commands: Commands,
@@ -227,40 +257,5 @@ pub fn player_actions(
         if action_state.pressed(PlayerAction::TurnLeft) {
             velocity.angvel += 7.0 * time.delta_seconds();
         }
-    }
-}
-
-#[derive(Component, Default)]
-pub struct ReplicatedTransform {
-    pub translation: Vec3,
-    pub rotation: Quat,
-}
-
-pub fn update_replication_transforms(
-    mut transforms: Query<(&Transform, &mut ReplicatedTransform)>,
-) {
-    transforms.iter_mut().for_each(|(trans, mut repl)| {
-        repl.translation = trans.translation;
-        repl.rotation = trans.rotation;
-    });
-}
-
-pub fn update_transforms_from_replication(
-    mut transforms: Query<(&mut Transform, &ReplicatedTransform)>,
-) {
-    transforms.iter_mut().for_each(|(mut trans, repl)| {
-        trans.translation = repl.translation;
-        trans.rotation = repl.rotation;
-    });
-}
-
-pub struct TransformReplicationPlugin;
-
-impl Plugin for TransformReplicationPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems((
-            update_replication_transforms,
-            update_transforms_from_replication,
-        ));
     }
 }

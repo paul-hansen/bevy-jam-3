@@ -49,7 +49,6 @@ fn update_health_on_damage(
         if let Ok(mut health) = query.get_mut(event.entity) {
             health.current -= event.amount;
             health.current = health.current.max(0.0);
-
             if health.current <= 0.0 {
                 death_events.send(DeathEvent {
                     entity: event.entity,
@@ -66,7 +65,9 @@ fn despawn_on_death<C: Component>(
 ) {
     for event in death_events.iter() {
         if query.contains(event.entity) {
-            commands.entity(event.entity).despawn_recursive();
+            if let Some(ent_cmds) = commands.get_entity(event.entity) {
+                ent_cmds.despawn_recursive();
+            }
         }
     }
 }

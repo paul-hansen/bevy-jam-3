@@ -1,6 +1,4 @@
-use crate::{
-    bundles::lyon_rendering::{get_path_from_verts, LyonRenderBundle, UNIT_SQUARE_PATH},
-};
+use crate::bundles::lyon_rendering::{get_path_from_verts, LyonRenderBundle, UNIT_SQUARE_PATH};
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::ShapeBundle;
 use bevy_rapier2d::{
