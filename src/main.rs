@@ -6,6 +6,7 @@
 mod cli;
 
 use crate::cli::CliPlugin;
+use crate::health::HealthPlugin;
 use crate::network::NetworkPlugin;
 use crate::player::PlayerPlugin;
 use arena::ArenaPlugin;
@@ -26,6 +27,7 @@ mod bundles;
 mod constructed_geometry;
 mod forms;
 mod game_manager;
+mod health;
 mod network;
 mod player;
 
@@ -50,6 +52,7 @@ fn main() {
         .add_plugin(GameManager)
         .add_plugin(ArenaPlugin)
         .add_plugin(CliPlugin)
+        .add_plugin(HealthPlugin)
         .insert_resource(Msaa::Sample8);
 
     if !app.is_plugin_added::<EguiPlugin>() {
