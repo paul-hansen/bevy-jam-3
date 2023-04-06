@@ -909,28 +909,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bevy_jam_3"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "bevy-inspector-egui",
- "bevy_editor_pls",
- "bevy_egui",
- "bevy_prototype_lyon",
- "bevy_rapier2d",
- "bevy_replicon",
- "clap",
- "egui",
- "futures-lite",
- "lazy_static",
- "leafwing-input-manager",
- "rand 0.8.5",
- "renet_visualizer",
- "serde",
- "surf",
-]
-
-[[package]]
 name = "bevy_log"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1148,9 +1126,9 @@ dependencies = [
 
 [[package]]
 name = "bevy_replicon"
-version = "0.2.1"
+version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eb994bef9dd4e2d579dc737d4d17455fc0ae8d020dbc726d06ff2256a264ce99"
+checksum = "b5280b6aca116ec4e2c13f7cf2b6a406b6047c311227169c996425731171c419"
 dependencies = [
  "bevy",
  "bevy_renet",
@@ -4668,6 +4646,28 @@ name = "stdweb-internal-runtime"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "213701ba3370744dcd1a12960caa4843b3d68b4d1c0a5d575e0d65b2ee9d16c0"
+
+[[package]]
+name = "stellar-squeezebox"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy-inspector-egui",
+ "bevy_editor_pls",
+ "bevy_egui",
+ "bevy_prototype_lyon",
+ "bevy_rapier2d",
+ "bevy_replicon",
+ "clap",
+ "egui",
+ "futures-lite",
+ "lazy_static",
+ "leafwing-input-manager",
+ "rand 0.8.5",
+ "renet_visualizer",
+ "serde",
+ "surf",
+]
 
 [[package]]
 name = "str-buf"

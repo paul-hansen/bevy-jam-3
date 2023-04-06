@@ -1,19 +1,18 @@
 [package]
-name = "bevy_jam_3"
+name = "stellar-squeezebox"
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
 bevy = "0.10"
-bevy_editor_pls = { version = "0.4.0", features = ["highlight_changes"], optional = true}
-bevy_replicon = "0.2.1"
+bevy_editor_pls = { version = "0.4.0", features = ["highlight_changes"], optional = true }
+bevy_replicon = "0.2.2"
 clap = { version = "4.2.1", features = ["derive"] }
 leafwing-input-manager = "0.9.1"
 surf = "2.3.2"
 bevy_prototype_lyon = "0.8.0"
 renet_visualizer = { version = "0.0.4", features = ["bevy"] }
-lazy_static = "1.4.0"
 serde = { version = "1.0.159", features = ["derive"] }
 bevy_rapier2d = {version = "0.21.0", features = ["enhanced-determinism", "debug-render-2d"]}
 rand = {version = "0.8.5"}
@@ -21,6 +20,7 @@ bevy_egui = "0.20"
 egui = "0.21"
 bevy-inspector-egui = "0.18"
 futures-lite = "1.12.0"
+lazy_static="1.4.0"
 # Enable a small amount of optimization in debug mode
 [profile.dev]
 opt-level = 1

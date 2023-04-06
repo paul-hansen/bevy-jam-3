@@ -2,10 +2,9 @@ use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::ShapeBundle;
 use bevy_rapier2d::{prelude::{Collider, Sensor}, rapier::prelude::{CollisionEvent, ContactForceEvent}};
 use bevy_replicon::replication_core::AppReplicationExt;
-use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
-
-use crate::bundles::lyon_rendering::{get_path_from_verts, LyonRenderBundle};
+use lazy_static::lazy_static;
+use crate::bundles::lyon_rendering::{get_path_from_verts, LyonRenderBundle, UNIT_SQUARE_PATH};
 
 #[derive(
     Component, Reflect, Debug, Default, Copy, Clone, PartialEq, Eq, Serialize, Deserialize,
@@ -38,7 +37,7 @@ pub fn spawn_arena(mut cmds: Commands, arenas: Query<(&Arena, Entity), Added<Are
         let id = cmds
             .spawn(LyonRenderBundle {
                 shape_render: ShapeBundle {
-                    path: get_path_from_verts(ARENA_BOUNDARY.to_vec(), arena.starting_size),
+                    path: get_path_from_verts(&UNIT_SQUARE_PATH, arena.starting_size),
                     ..default()
                 },
                 ..default()
@@ -57,7 +56,8 @@ pub fn spawn_arena(mut cmds: Commands, arenas: Query<(&Arena, Entity), Added<Are
     });
 }
 
-lazy_static! {
+
+lazy_static!{
     pub static ref ARENA_BOUNDARY: Vec<(f32, f32)> =
         vec![(0.0, 0.0), (0.0, 1.0), (1.0, 1.0), (1.0, 0.0), (0.0, 0.0)];
 }

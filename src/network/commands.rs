@@ -1,5 +1,5 @@
 use crate::game_manager::GameState;
-use crate::network::{NetworkOwner, DEFAULT_PORT, MAX_CLIENTS, PROTOCOL_ID};
+use crate::network::{NetworkOwner, DEFAULT_PORT, MAX_CLIENTS, MAX_MESSAGE_SIZE, PROTOCOL_ID};
 use crate::player::commands::SpawnPlayer;
 use crate::player::PlayerColor;
 use bevy::ecs::system::{Command, SystemState};
@@ -7,7 +7,7 @@ use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use bevy_replicon::prelude::*;
 use bevy_replicon::renet::{
-    ClientAuthentication, RenetConnectionConfig, ServerAuthentication, ServerConfig,
+    ChannelConfig, ClientAuthentication, RenetConnectionConfig, ServerAuthentication, ServerConfig,
 };
 use std::net::{IpAddr, Ipv4Addr, SocketAddr, UdpSocket};
 use std::time::SystemTime;
@@ -52,8 +52,10 @@ impl Command for Connect {
                 Query<&mut Window, With<PrimaryWindow>>,
             )>::new(world);
             let (network_channels, mut primary_window) = state.get_mut(world);
-            let receive_channels_config = network_channels.server_channels();
-            let send_channels_config = network_channels.client_channels();
+            let mut receive_channels_config = network_channels.server_channels();
+            apply_message_size_to_channels(&mut receive_channels_config);
+            let mut send_channels_config = network_channels.client_channels();
+            apply_message_size_to_channels(&mut send_channels_config);
             let current_time = SystemTime::now()
                 .duration_since(SystemTime::UNIX_EPOCH)
                 .unwrap();
@@ -97,8 +99,11 @@ impl Command for Listen {
                 Query<&mut Window, With<PrimaryWindow>>,
             )>::new(world);
             let (network_channels, mut primary_window) = state.get_mut(world);
-            let send_channels_config = network_channels.server_channels();
-            let receive_channels_config = network_channels.client_channels();
+            let mut send_channels_config = network_channels.server_channels();
+            apply_message_size_to_channels(&mut send_channels_config);
+            let mut receive_channels_config = network_channels.client_channels();
+            apply_message_size_to_channels(&mut receive_channels_config);
+
             let current_time = SystemTime::now()
                 .duration_since(SystemTime::UNIX_EPOCH)
                 .unwrap();
@@ -132,4 +137,13 @@ impl Command for Listen {
         }
         .write(world);
     }
+}
+
+fn apply_message_size_to_channels(channels: &mut [ChannelConfig]) {
+    channels.iter_mut().for_each(|c| {
+        if let ChannelConfig::Unreliable(c) = c {
+            c.max_message_size = MAX_MESSAGE_SIZE;
+            c.packet_budget = MAX_MESSAGE_SIZE * 2;
+        }
+    });
 }

@@ -1,4 +1,5 @@
 pub mod commands;
+pub mod weapons;
 
 use crate::bundles::PhysicsBundle;
 use crate::bundles::lyon_rendering::ship_paths::SHIP_PATH;
@@ -6,6 +7,7 @@ use crate::bundles::lyon_rendering::{get_path_from_verts, LyonRenderBundle};
 use crate::game_manager::GameState;
 use crate::network::NetworkOwner;
 use crate::player::commands::PlayerCommands;
+use crate::player::weapons::WeaponsPlugin;
 use bevy::math::Vec3Swizzles;
 use bevy::prelude::*;
 use bevy_prototype_lyon::draw::Stroke;
@@ -21,6 +23,7 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(InputManagerPlugin::<PlayerAction>::default());
+        app.add_plugin(WeaponsPlugin);
         app.register_type::<PlayerColor>();
         app.register_type::<Player>();
         app.add_systems(
@@ -60,6 +63,9 @@ impl PlayerAction {
         );
         input_map.insert(KeyCode::W, Self::Thrust);
         input_map.insert(KeyCode::Up, Self::Thrust);
+        input_map.insert(KeyCode::Space, Self::Shoot);
+        input_map.insert(GamepadButtonType::South, Self::Shoot);
+        input_map.insert(GamepadButtonType::RightTrigger2, Self::Shoot);
         input_map
     }
 }
@@ -93,8 +99,8 @@ impl PlayerColor {
     pub fn get(player_index: usize) -> Self {
         match player_index {
             0 => PlayerColor::Red,
-            1 => PlayerColor::Green,
-            2 => PlayerColor::Blue,
+            1 => PlayerColor::Blue,
+            2 => PlayerColor::Green,
             3 => PlayerColor::Yellow,
             _ => {
                 warn!("Should probably add more colors");
@@ -106,17 +112,20 @@ impl PlayerColor {
 
 #[derive(Bundle, Default)]
 pub struct PlayerBundle {
+    name: Name,
     lyon: LyonRenderBundle,
     replication: Replication,
     action_state: ActionState<PlayerAction>,
+    physics: PhysicsBundle,
 }
 
 impl PlayerBundle {
     fn with_color(color: PlayerColor) -> Self {
         Self {
+            name: Name::new(format!("Player {:?}", color)),
             lyon: LyonRenderBundle {
                 shape_render: ShapeBundle {
-                    path: get_path_from_verts(SHIP_PATH.to_vec(), Vec2::splat(32.)),
+                    path: get_path_from_verts(&SHIP_PATH, Vec2::splat(32.)),
                     transform: Transform::from_xyz(
                         0.0,
                         0.0,
@@ -169,15 +178,19 @@ pub fn pregame_listen_for_player_connect(
 /// Handles inserting the player bundle whenever [`Player`] is added to an entity.
 fn insert_player_bundle(
     mut commands: Commands,
-    query: Query<(Entity, &Player, &NetworkOwner), Added<Player>>,
+    query: Query<(Entity, &Player, &NetworkOwner, &Transform), Added<Player>>,
     client: Option<Res<RenetClient>>,
 ) {
-    for (entity, player, client_id) in query.iter() {
+    for (entity, player, client_id, transform) in query.iter() {
         info!("Inserting Player bundle for new player");
         let player_entity = commands
             .entity(entity)
-            .insert(PlayerBundle::with_color(player.color))
             .insert(PhysicsBundle::default())
+            .insert({
+                let mut bundle = PlayerBundle::with_color(player.color);
+                bundle.lyon.shape_render.transform = *transform;
+                bundle
+            })
             .id();
 
         if let Some(client) = &client {

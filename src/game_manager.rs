@@ -88,7 +88,7 @@ pub fn build_level(mut cmds: Commands, server_resource: Option<Res<RenetServer>>
         return;
     }
 
-    let arena_size = Vec2::new(600.0, 400.0);
+    let arena_size = Vec2::new(1800.0, 900.0);
     cmds.spawn(Arena {
         starting_size: arena_size,
         current_size: arena_size,
