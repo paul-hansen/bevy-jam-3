@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::ShapeBundle;
+use bevy_rapier2d::{prelude::{Collider, Sensor}, rapier::prelude::{CollisionEvent, ContactForceEvent}};
 use bevy_replicon::replication_core::AppReplicationExt;
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
@@ -47,10 +48,11 @@ pub fn spawn_arena(mut cmds: Commands, arenas: Query<(&Arena, Entity), Added<Are
 
         cmds.entity(ent)
             .insert(SpatialBundle::from_transform(Transform::from_xyz(
-                -arena.starting_size.x / 2.0,
-                -arena.starting_size.y / 2.0,
+                0.0,
+                0.0,
                 0.0,
             )))
+            .insert((Collider::cuboid(arena.starting_size.x/2.0, arena.starting_size.y/2.0), Sensor))
             .add_child(id);
     });
 }
@@ -58,6 +60,21 @@ pub fn spawn_arena(mut cmds: Commands, arenas: Query<(&Arena, Entity), Added<Are
 lazy_static! {
     pub static ref ARENA_BOUNDARY: Vec<(f32, f32)> =
         vec![(0.0, 0.0), (0.0, 1.0), (1.0, 1.0), (1.0, 0.0), (0.0, 0.0)];
+}
+
+
+/* A system that displays the events. */
+fn display_events(
+  mut collision_events: EventReader<CollisionEvent>,
+  mut contact_force_events: EventReader<ContactForceEvent>,
+) {
+  for collision_event in collision_events.iter() {
+      println!("Received collision event: {:?}", collision_event);
+  }
+
+  for contact_force_event in contact_force_events.iter() {
+      println!("Received contact force event: {:?}", contact_force_event);
+  }
 }
 
 pub struct ArenaPlugin;
@@ -68,5 +85,9 @@ impl Plugin for ArenaPlugin {
         app.register_type::<Force>();
         app.replicate::<Arena>();
         app.add_system(spawn_arena);
+
+        app.add_event::<ContactForceEvent>();
+        app.add_event::<CollisionEvent>();
+        app.add_system(display_events);
     }
 }

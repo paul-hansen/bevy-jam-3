@@ -1,5 +1,6 @@
 pub mod commands;
 
+use crate::bundles::PhysicsBundle;
 use crate::bundles::lyon_rendering::ship_paths::SHIP_PATH;
 use crate::bundles::lyon_rendering::{get_path_from_verts, LyonRenderBundle};
 use crate::game_manager::GameState;
@@ -176,6 +177,7 @@ fn insert_player_bundle(
         let player_entity = commands
             .entity(entity)
             .insert(PlayerBundle::with_color(player.color))
+            .insert(PhysicsBundle::default())
             .id();
 
         if let Some(client) = &client {
