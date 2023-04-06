@@ -1,6 +1,5 @@
 use crate::{
     bundles::lyon_rendering::{get_path_from_verts, LyonRenderBundle, UNIT_SQUARE_PATH},
-    player::Player,
 };
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::ShapeBundle;
@@ -101,7 +100,6 @@ fn check_arena_residency(
             let Ok(mut arena_resident) = arena_residents.get_mut(ent) else {
         return true;
       };
-
             info!("Setting arena_resident to inside: {ent:?}");
             arena_resident.is_outside = false;
 
