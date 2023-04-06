@@ -1,7 +1,8 @@
 use crate::bundles::lyon_rendering::projectile_paths::LASER_PATH;
 use crate::bundles::lyon_rendering::{get_path_from_verts, LyonRenderBundle};
+use crate::game_manager::GameState;
 use crate::network::util::spawn_bundle_default_on_added;
-use crate::network::NetworkOwner;
+use crate::network::{is_server, NetworkOwner};
 use crate::player::PlayerAction;
 use bevy::math::Vec3Swizzles;
 use bevy::prelude::*;
@@ -24,7 +25,11 @@ impl Plugin for WeaponsPlugin {
         app.register_type::<WeaponType>();
         app.replicate::<Weapon>();
         app.replicate::<Laser>();
-        app.add_system(fire_weapon_action.in_set(ServerSet::Authority));
+        app.add_system(
+            fire_weapon_action
+                .run_if(is_server())
+                .in_set(OnUpdate(GameState::Playing)),
+        );
         app.add_system(move_lasers);
         app.add_system(detect_laser_hits.in_set(ServerSet::Authority));
         app.add_system(despawn_oldest_if_exceed_count::<30, Laser>.in_set(ServerSet::Authority));

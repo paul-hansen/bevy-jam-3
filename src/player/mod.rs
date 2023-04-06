@@ -18,6 +18,7 @@ use bevy_replicon::prelude::*;
 use bevy_replicon::renet::{RenetClient, ServerEvent};
 use leafwing_input_manager::prelude::*;
 use serde::{Deserialize, Serialize};
+use std::fmt::Formatter;
 
 use self::weapons::DamagedEvent;
 
@@ -30,13 +31,9 @@ impl Plugin for PlayerPlugin {
         app.register_type::<PlayerColor>();
         app.register_type::<Player>();
         app.add_systems(
-            (
-                player_actions,
-                spawn_player_on_connected,
-                damage_players_outside_arena,
-            )
-                .in_set(OnUpdate(GameState::Playing)),
+            (player_actions, damage_players_outside_arena).in_set(OnUpdate(GameState::Playing)),
         );
+        app.add_system(spawn_player_on_connected);
         app.add_systems((pregame_listen_for_player_connect,).in_set(OnUpdate(GameState::PreGame)));
         app.add_system(insert_player_bundle);
     }
@@ -81,10 +78,16 @@ impl PlayerAction {
 #[derive(Component, Default, Reflect, Copy, Clone)]
 #[reflect(Component, Default)]
 pub struct Player {
-    color: PlayerColor,
+    pub color: PlayerColor,
 }
 
-#[derive(Default, Copy, Clone, Debug, Reflect)]
+impl std::fmt::Display for Player {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.color)
+    }
+}
+
+#[derive(Default, Copy, Clone, Debug, Reflect, Serialize, Deserialize)]
 #[reflect(Default)]
 pub enum PlayerColor {
     #[default]
@@ -92,6 +95,12 @@ pub enum PlayerColor {
     Blue,
     Green,
     Yellow,
+}
+
+impl std::fmt::Display for PlayerColor {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
 
 impl PlayerColor {
