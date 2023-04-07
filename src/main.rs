@@ -24,6 +24,7 @@ use game_manager::GameManager;
 
 mod arena;
 mod asteroid;
+mod audio;
 mod bundles;
 mod constructed_geometry;
 mod forms;
@@ -31,7 +32,6 @@ mod game_manager;
 mod health;
 mod network;
 mod player;
-mod audio;
 
 fn main() {
     let mut app = App::new();
