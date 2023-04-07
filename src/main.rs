@@ -10,6 +10,7 @@ use crate::health::HealthPlugin;
 use crate::network::NetworkPlugin;
 use crate::player::PlayerPlugin;
 use arena::ArenaPlugin;
+use audio::AudioPlugin;
 use bevy::core_pipeline::bloom::{BloomCompositeMode, BloomSettings};
 use bevy::core_pipeline::clear_color::ClearColorConfig;
 use bevy::core_pipeline::tonemapping::{DebandDither, Tonemapping};
@@ -30,6 +31,7 @@ mod game_manager;
 mod health;
 mod network;
 mod player;
+mod audio;
 
 fn main() {
     let mut app = App::new();
@@ -53,6 +55,7 @@ fn main() {
         .add_plugin(ArenaPlugin)
         .add_plugin(CliPlugin)
         .add_plugin(HealthPlugin)
+        .add_plugin(AudioPlugin)
         .insert_resource(Msaa::Sample8);
 
     if !app.is_plugin_added::<EguiPlugin>() {
