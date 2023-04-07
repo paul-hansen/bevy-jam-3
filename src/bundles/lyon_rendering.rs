@@ -65,7 +65,7 @@ impl Default for LyonRenderBundle {
 
 pub fn get_path_from_verts(points: &[(f32, f32)], scale: Vec2) -> Path {
     let mut path_builder = PathBuilder::new();
-
+    info!("Scale {:?}", scale);
     for point in points {
         path_builder.line_to(Vec2::from(*point) * scale);
     }

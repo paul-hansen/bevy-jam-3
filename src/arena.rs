@@ -1,6 +1,6 @@
 use crate::bundles::lyon_rendering::{get_path_from_verts, LyonRenderBundle, UNIT_SQUARE_PATH};
 use bevy::prelude::*;
-use bevy_prototype_lyon::prelude::ShapeBundle;
+use bevy_prototype_lyon::prelude::{Path, ShapeBundle};
 use bevy_rapier2d::{
     prelude::{Collider, QueryFilter, RapierContext, Sensor},
     rapier::prelude::{CollisionEvent, ContactForceEvent},
@@ -39,9 +39,11 @@ pub struct Arena {
     pub friendly_force: Force,
 }
 
+#[derive(Component)]
+pub struct ArenaBoundary;
+
 pub fn spawn_arena(mut cmds: Commands, arenas: Query<(&Arena, Entity), Added<Arena>>) {
     arenas.iter().for_each(|(arena, ent)| {
-        info!("Enriching spawned Arena");
         let id = cmds
             .spawn(LyonRenderBundle {
                 shape_render: ShapeBundle {
@@ -51,6 +53,7 @@ pub fn spawn_arena(mut cmds: Commands, arenas: Query<(&Arena, Entity), Added<Are
                 ..default()
             })
             .insert(Name::new("Arena Boundary"))
+            .insert(ArenaBoundary)
             .id();
 
         cmds.entity(ent)
@@ -62,6 +65,29 @@ pub fn spawn_arena(mut cmds: Commands, arenas: Query<(&Arena, Entity), Added<Are
                 Sensor,
             ))
             .add_child(id);
+    });
+}
+
+pub fn update_arena_size(
+    mut arenas: Query<(&mut Collider, &Arena), Changed<Arena>>,
+    mut boundary_walls: Query<&mut Path, With<ArenaBoundary>>,
+) {
+    arenas.iter_mut().for_each(|(mut collider, arena)| {
+        let Ok(mut wall) = boundary_walls.get_single_mut() else {
+            warn!("Could not find boundary wall");
+            return;
+        };
+
+        *wall = get_path_from_verts(&UNIT_SQUARE_PATH, arena.current_size);
+        *collider = Collider::cuboid(arena.current_size.x / 2.0, arena.current_size.y / 2.0);
+    });
+}
+
+pub fn shrink_arena(mut arenas: Query<&mut Arena>, time: Res<Time>) {
+    arenas.iter_mut().for_each(|mut arena| {
+        arena.current_size = (arena.current_size
+            - (1.0 / 120.0 * time.delta_seconds() * arena.starting_size))
+            .max(Vec2::splat(0.001));
     });
 }
 
@@ -98,9 +124,7 @@ fn check_arena_residency(
             let Ok(mut arena_resident) = arena_residents.get_mut(ent) else {
         return true;
       };
-            info!("Setting arena_resident to inside: {ent:?}");
             arena_resident.is_outside = false;
-
             true
         },
     );
@@ -113,7 +137,7 @@ impl Plugin for ArenaPlugin {
         app.register_type::<Arena>();
         app.register_type::<Force>();
         app.replicate::<Arena>();
-        app.add_system(spawn_arena);
+        app.add_systems((spawn_arena, shrink_arena, update_arena_size));
 
         app.add_event::<ContactForceEvent>();
         app.add_event::<CollisionEvent>();

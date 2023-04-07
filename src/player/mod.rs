@@ -202,7 +202,7 @@ pub fn damage_players_outside_arena(
     if server.is_none() {
         return;
     }
-    info!("{}", players.iter().len());
+
     players.iter().for_each(|(arena_resident, entity)| {
         if arena_resident.is_outside {
             dmg_events.send(DamagedEvent {
