@@ -13,10 +13,10 @@ pub struct SpawnPlayer {
 }
 
 const SPAWN_LOCATIONS: [(Vec2, f32); 4] = [
-    (Vec2::new(140.0, 100.0), 135.0),
-    (Vec2::new(-140.0, -100.0), -45.0),
-    (Vec2::new(140.0, -100.0), 45.0),
-    (Vec2::new(-140.0, 100.0), -135.0),
+    (Vec2::new(440.0, 350.0), 135.0),
+    (Vec2::new(-440.0, -350.0), -45.0),
+    (Vec2::new(440.0, -350.0), 45.0),
+    (Vec2::new(-440.0, 350.0), -135.0),
 ];
 
 impl Command for SpawnPlayer {
