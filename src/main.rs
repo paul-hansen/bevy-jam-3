@@ -11,7 +11,7 @@ use crate::health::HealthPlugin;
 use crate::network::NetworkPlugin;
 use crate::player::PlayerPlugin;
 use arena::ArenaPlugin;
-use audio::AudioPlugin;
+use audio::SqueezeAudioPlugin;
 use bevy::core_pipeline::bloom::{BloomCompositeMode, BloomSettings};
 use bevy::core_pipeline::clear_color::ClearColorConfig;
 use bevy::core_pipeline::tonemapping::{DebandDither, Tonemapping};
@@ -56,7 +56,8 @@ fn main() {
         .add_plugin(ArenaPlugin)
         .add_plugin(CliPlugin)
         .add_plugin(HealthPlugin)
-        .add_plugin(AudioPlugin)
+        .add_plugin(bevy_kira_audio::AudioPlugin)
+        .add_plugin(SqueezeAudioPlugin)
         .insert_resource(Msaa::Sample8);
 
     if !app.is_plugin_added::<EguiPlugin>() {
