@@ -3,15 +3,18 @@ use std::f32::consts::PI;
 use bevy::prelude::*;
 use bevy_egui::EguiContexts;
 use bevy_replicon::prelude::{SendMode, ServerEventAppExt, ToClients};
+use bevy_replicon::renet::RenetServer;
 use bevy_replicon::replication_core::Replication;
+use bevy_replicon::server::SERVER_ID;
 use egui::Align2;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 use crate::forms::{ConnectForm, ListenForm};
 
-use crate::network::{is_server, NetworkInfo};
-use crate::player::{Player, PlayerColor};
+use crate::network::{is_server, NetworkInfo, NetworkOwner};
+use crate::player::commands::PlayerCommands;
+use crate::player::{Player, PlayerColor, PlayerColors};
 use crate::{
     arena::{Arena, Force},
     asteroid::{asteroid_spawn, Asteroid},
@@ -33,6 +36,7 @@ pub enum GameState {
 pub enum GameEvent {
     RoundWon { winner: PlayerColor },
     Tie,
+    Restart,
 }
 
 pub struct GameManager;
@@ -41,6 +45,8 @@ impl Plugin for GameManager {
     fn build(&self, app: &mut App) {
         app.add_state::<GameState>();
         app.add_server_event::<GameEvent>();
+        app.register_type::<RestartCountdown>();
+        app.register_type::<PostGameUiRoot>();
         app.add_systems((load_state,).in_schedule(OnEnter(GameState::Loading)));
         app.add_systems((draw_main_menu,).in_set(OnUpdate(GameState::MainMenu)));
         app.add_system(
@@ -49,11 +55,37 @@ impl Plugin for GameManager {
                 .in_set(OnUpdate(GameState::Playing)),
         );
         app.add_system(show_post_game_text);
+        app.add_system(update_restart_countdown);
         app.add_systems(
             (build_level.run_if(is_server()),).in_schedule(OnEnter(GameState::Playing)),
         );
+        app.add_systems(
+            (
+                despawn_everything.run_if(is_server()),
+                reload_with_current_players.run_if(is_server()),
+            )
+                .chain()
+                .in_schedule(OnExit(GameState::PostGame)),
+        );
 
         app.add_systems((asteroid_spawn,));
+    }
+}
+
+#[derive(Component, Reflect, Default)]
+pub struct Persist;
+
+#[derive(Component, Reflect, Default)]
+pub struct RestartCountdown {
+    restart_at_time: f64,
+}
+
+impl RestartCountdown {
+    pub const DEFAULT_RESTART_DELAY_SECONDS: f64 = 5.0;
+    pub fn new(time: &Time) -> Self {
+        Self {
+            restart_at_time: time.elapsed_seconds_f64() + Self::DEFAULT_RESTART_DELAY_SECONDS,
+        }
     }
 }
 
@@ -161,54 +193,132 @@ pub fn end_game_last_man_standing(
     }
 }
 
+#[derive(Component, Debug, Default, Reflect)]
+pub struct PostGameUiRoot;
+
 fn show_post_game_text(
     mut commands: Commands,
     asset_server: ResMut<AssetServer>,
     mut game_events: EventReader<GameEvent>,
+    time: Res<Time>,
+    ui_root_query: Query<Entity, With<PostGameUiRoot>>,
 ) {
     for event in game_events.iter() {
         info!("GameEvent from server {event:?}");
         let win_text = match event {
             GameEvent::RoundWon { winner } => (format!("{} wins!\n\n", winner), winner.color()),
             GameEvent::Tie => ("Tie!".to_string(), Color::YELLOW),
+            GameEvent::Restart => {
+                ui_root_query.for_each(|e| {
+                    commands.entity(e).despawn_recursive();
+                });
+                return;
+            }
         };
 
         commands
-            .spawn(NodeBundle {
-                style: Style {
-                    size: Size {
-                        width: Val::Percent(100.0),
-                        height: Val::Percent(100.0),
+            .spawn((
+                NodeBundle {
+                    style: Style {
+                        size: Size {
+                            width: Val::Percent(100.0),
+                            height: Val::Percent(100.0),
+                        },
+                        align_items: AlignItems::Center,
+                        flex_direction: FlexDirection::Column,
+                        gap: Size {
+                            width: Default::default(),
+                            height: Val::Px(24.0),
+                        },
+                        justify_content: JustifyContent::Center,
+                        ..default()
                     },
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
                     ..default()
                 },
-                ..default()
-            })
+                PostGameUiRoot,
+            ))
             .with_children(|child_builder| {
                 child_builder.spawn(TextBundle {
-                    text: Text::from_sections(vec![
-                        TextSection::new(
-                            win_text.0,
-                            TextStyle {
-                                font: asset_server.load("VectorBattleFont/Vectorb.ttf"),
-                                font_size: 36.0,
-                                color: win_text.1,
-                            },
-                        ),
-                        // TextSection::new(
-                        //     "Press enter to play again",
-                        //     TextStyle {
-                        //         font: asset_server.load("VectorBattleFont/Vectorb.ttf"),
-                        //         font_size: 24.0,
-                        //         color: Color::YELLOW,
-                        //     },
-                        // ),
-                    ])
-                    .with_alignment(TextAlignment::Center),
+                    text: Text::from_section(
+                        win_text.0,
+                        TextStyle {
+                            font: asset_server.load("VectorBattleFont/Vectorb.ttf"),
+                            font_size: 36.0,
+                            color: win_text.1,
+                        },
+                    ),
                     ..default()
                 });
+                child_builder.spawn((
+                    RestartCountdown::new(time.as_ref()),
+                    TextBundle {
+                        text: Text::from_section(
+                            format!(
+                                "Restarting in {:.0}",
+                                RestartCountdown::DEFAULT_RESTART_DELAY_SECONDS
+                            ),
+                            TextStyle {
+                                font: asset_server.load("VectorBattleFont/Vectorb.ttf"),
+                                font_size: 24.0,
+                                color: Color::YELLOW,
+                            },
+                        ),
+                        ..default()
+                    },
+                ));
             });
+    }
+}
+
+fn update_restart_countdown(
+    mut query: Query<(&mut Text, &RestartCountdown)>,
+    time: Res<Time>,
+    mut game_state: ResMut<NextState<GameState>>,
+    server: Option<Res<RenetServer>>,
+    mut game_events: EventWriter<ToClients<GameEvent>>,
+) {
+    for (mut text, countdown) in query.iter_mut() {
+        let time_remaining = countdown.restart_at_time - time.elapsed_seconds_f64();
+        text.sections[0].value = if time_remaining > 0.0 {
+            format!("Restarting in {:.0}", time_remaining.ceil())
+        } else {
+            if server.is_some() {
+                game_state.set(GameState::Playing);
+                game_events.send(ToClients {
+                    mode: SendMode::Broadcast,
+                    event: GameEvent::Restart,
+                })
+            }
+            "Restarting".to_string()
+        };
+    }
+}
+
+#[cfg(feature = "bevy_editor_pls")]
+type PersistentRootEntities = (
+    Without<Parent>,
+    Without<Persist>,
+    Without<Window>,
+    Without<bevy_editor_pls::default_windows::hierarchy::HideInEditor>,
+);
+#[cfg(not(feature = "bevy_editor_pls"))]
+type PersistentRootEntities = (Without<Parent>, Without<Window>, Without<Persist>);
+
+fn despawn_everything(mut commands: Commands, query: Query<Entity, PersistentRootEntities>) {
+    for entity in query.iter() {
+        commands.entity(entity).despawn_recursive();
+    }
+}
+
+fn reload_with_current_players(
+    mut commands: Commands,
+    server: Res<RenetServer>,
+    player_colors: Res<PlayerColors>,
+) {
+    commands.spawn_player(PlayerColor::Red, NetworkOwner(SERVER_ID));
+    for client_id in server.clients_id() {
+        if let Some(color) = player_colors.colors_by_client_id.get(&client_id) {
+            commands.spawn_player(*color, NetworkOwner(client_id));
+        }
     }
 }

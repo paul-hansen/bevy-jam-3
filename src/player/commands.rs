@@ -1,7 +1,7 @@
 use crate::health::Health;
 use crate::network::NetworkOwner;
 use crate::player::weapons::Weapon;
-use crate::player::{Player, PlayerAction, PlayerColor};
+use crate::player::{Player, PlayerAction, PlayerColor, PlayerColors};
 use bevy::ecs::system::{Command, Spawn};
 use bevy::prelude::*;
 use bevy_replicon::prelude::Replication;
@@ -22,6 +22,11 @@ const SPAWN_LOCATIONS: [(Vec2, f32); 4] = [
 impl Command for SpawnPlayer {
     fn write(self, world: &mut World) {
         let (position, rotation) = SPAWN_LOCATIONS[self.color as usize];
+
+        world
+            .resource_mut::<PlayerColors>()
+            .colors_by_client_id
+            .insert(self.network_owner.0, self.color);
 
         Spawn {
             bundle: (

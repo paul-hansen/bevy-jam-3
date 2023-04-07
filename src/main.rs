@@ -6,6 +6,7 @@
 mod cli;
 
 use crate::cli::CliPlugin;
+use crate::game_manager::Persist;
 use crate::health::HealthPlugin;
 use crate::network::NetworkPlugin;
 use crate::player::PlayerPlugin;
@@ -69,6 +70,7 @@ fn main() {
 
 fn setup(mut commands: Commands) {
     commands.spawn((
+        Persist,
         Camera2dBundle {
             camera: Camera {
                 hdr: true,

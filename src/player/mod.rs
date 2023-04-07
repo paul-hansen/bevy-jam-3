@@ -11,6 +11,7 @@ use crate::player::commands::PlayerCommands;
 use crate::player::weapons::WeaponsPlugin;
 use bevy::math::Vec3Swizzles;
 use bevy::prelude::*;
+use bevy::utils::HashMap;
 use bevy_prototype_lyon::draw::Stroke;
 use bevy_prototype_lyon::prelude::ShapeBundle;
 use bevy_rapier2d::prelude::Velocity;
@@ -29,6 +30,8 @@ impl Plugin for PlayerPlugin {
         app.add_plugin(InputManagerPlugin::<PlayerAction>::default());
         app.add_plugin(WeaponsPlugin);
         app.register_type::<PlayerColor>();
+        app.register_type::<PlayerColors>();
+        app.insert_resource(PlayerColors::default());
         app.register_type::<Player>();
         app.add_systems(
             (player_actions, damage_players_outside_arena).in_set(OnUpdate(GameState::Playing)),
@@ -127,6 +130,14 @@ impl PlayerColor {
     }
 }
 
+#[derive(Resource, Reflect, Default)]
+#[reflect(Resource, Default)]
+pub struct PlayerColors {
+    /// Lookup a [`PlayerColor`] by client_id
+    #[reflect(ignore)]
+    pub colors_by_client_id: HashMap<u64, PlayerColor>,
+}
+
 #[derive(Bundle, Default)]
 pub struct PlayerBundle {
     name: Name,
@@ -223,7 +234,7 @@ fn insert_player_bundle(
     client: Option<Res<RenetClient>>,
 ) {
     for (entity, player, client_id, transform) in query.iter() {
-        info!("Inserting Player bundle for new player");
+        info!("Inserting Player bundle for player: {}", player);
         let player_entity = commands
             .entity(entity)
             .insert(PhysicsBundle::default())
