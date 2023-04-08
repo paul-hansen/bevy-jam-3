@@ -97,7 +97,10 @@ pub fn asteroid_spawn(
                     get_path_from_verts(&roid_path, Vec2::splat(asteroid.scale)),
                 ))
             },
-            Health::default(),
+            Health{
+                current: 200.0,
+                max: 200.0
+            },
             Name::new("Asteroid"),
         ));
     });
