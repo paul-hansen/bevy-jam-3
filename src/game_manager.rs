@@ -144,7 +144,7 @@ pub fn build_level(mut cmds: Commands, time: Res<Time>) {
     .insert(Replication::default());
 
     let mut rng = rand::thread_rng();
-    for _ in 0..5 {
+    for _ in 0..25 {
         let roid_path = match (rng.gen_range(0..10) % 2) == 0 {
             true => RoidPath::One,
             false => RoidPath::Two,
