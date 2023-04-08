@@ -32,9 +32,19 @@ impl Plugin for WeaponsPlugin {
         );
         app.add_system(move_lasers);
         app.add_system(detect_laser_hits.in_set(ServerSet::Authority));
-        app.add_system(despawn_oldest_if_exceed_count::<30, Laser>.in_set(ServerSet::Authority));
-        app.add_system(despawn_after_milliseconds::<800, Laser>.in_set(ServerSet::Authority));
-        app.add_system(spawn_bundle_default_on_added::<Laser, LaserBundle>);
+        app.add_system(
+            despawn_oldest_if_exceed_count::<30, Laser>
+                .run_if(is_server())
+                .in_base_set(CoreSet::PostUpdate),
+        );
+        app.add_system(
+            despawn_after_milliseconds::<800, Laser>
+                .run_if(is_server())
+                .in_base_set(CoreSet::PostUpdate),
+        );
+        app.add_system(
+            spawn_bundle_default_on_added::<Laser, LaserBundle>.in_base_set(CoreSet::PreUpdate),
+        );
     }
 }
 
