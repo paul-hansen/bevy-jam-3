@@ -1,4 +1,5 @@
 use crate::game_manager::GameState;
+use crate::network::matchmaking::{EphemeralMatchmakingLobby, MatchmakingState};
 use crate::network::{NetworkOwner, DEFAULT_PORT, MAX_CLIENTS, MAX_MESSAGE_SIZE, PROTOCOL_ID};
 use crate::player::commands::SpawnPlayer;
 use crate::player::PlayerColor;
@@ -136,6 +137,15 @@ impl Command for Listen {
             network_owner: NetworkOwner(SERVER_ID),
         }
         .write(world);
+        world.resource_mut::<MatchmakingState>().lobby = Some(EphemeralMatchmakingLobby {
+            ip: self.ip.to_string(),
+            name: "".to_string(),
+            player_capacity: MAX_CLIENTS as u8,
+            slots_occupied: 1,
+            auto_resart: true,
+            has_password: false,
+            last_updated: 0,
+        });
     }
 }
 

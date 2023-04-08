@@ -122,24 +122,12 @@ pub fn initialize_matchmaking_poller(mut mm_res: ResMut<MatchmakingState>) {
     mm_res.timer = Timer::from_seconds(3.0, TimerMode::Repeating);
 }
 
-//TODO: This is a test fn.
-pub fn register_server_host(mut mm_res: ResMut<MatchmakingState>) {
-    mm_res.lobby = Some(EphemeralMatchmakingLobby {
-        ip: "ME".to_string(),
-        name: "MY GAME".to_string(),
-        player_capacity: 5_u8,
-        slots_occupied: 1,
-        auto_resart: true,
-        has_password: false,
-        last_updated: 0,
-    })
-}
 pub struct MatchmakingPlugin;
 
 impl Plugin for MatchmakingPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<MatchmakingState>();
-        app.add_startup_systems((initialize_matchmaking_poller, register_server_host));
+        app.add_startup_systems((initialize_matchmaking_poller,));
         app.add_system(update_matchmaking_state);
         app.add_system(consume_matchmaking_responses);
     }
