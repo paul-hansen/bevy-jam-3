@@ -3,7 +3,8 @@ use bevy::{prelude::*, utils::HashMap};
 use bevy_mod_reqwest::{ReqwestBytesResult, ReqwestClient, ReqwestRequest};
 use serde::{Deserialize, Serialize};
 
-#[derive(Resource, Default)]
+#[derive(Resource, Default, Reflect)]
+#[reflect(Resource)]
 pub struct MatchmakingState {
     pub lobby: Option<EphemeralMatchmakingLobby>,
     pub server_list: HashMap<String, EphemeralMatchmakingLobby>,
@@ -16,7 +17,7 @@ pub struct PostLobbyReq;
 #[derive(Component)]
 pub struct GetLobbyReq;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Reflect, FromReflect)]
 #[serde(rename_all = "camelCase")]
 pub struct EphemeralMatchmakingLobby {
     pub ip: String,
@@ -130,6 +131,8 @@ pub struct MatchmakingPlugin;
 
 impl Plugin for MatchmakingPlugin {
     fn build(&self, app: &mut App) {
+        app.register_type::<MatchmakingState>();
+        app.register_type::<HashMap<String, EphemeralMatchmakingLobby>>();
         app.init_resource::<MatchmakingState>();
         app.add_startup_systems((initialize_matchmaking_poller,));
         app.add_system(update_matchmaking_state);
