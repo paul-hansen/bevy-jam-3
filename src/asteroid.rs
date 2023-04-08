@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::{Path, ShapeBundle, Stroke};
-use bevy_rapier2d::prelude::Collider;
+use bevy_rapier2d::prelude::{Collider, ColliderMassProperties, MassProperties};
 use serde::{Deserialize, Serialize};
 
 use crate::bundles::{
@@ -38,7 +38,13 @@ pub struct AsteroidBundle {
 impl Default for AsteroidBundle {
     fn default() -> Self {
         Self {
-            physics: Default::default(),
+            physics: PhysicsBundle {
+                mass: ColliderMassProperties::MassProperties(MassProperties {
+                    mass: 50.0,
+                    ..default()
+                }),
+                ..Default::default()
+            },
             render: LyonRenderBundle {
                 shape_render: ShapeBundle {
                     path: get_path_from_verts(&ROID_PATH, Vec2::splat(48.0)),
@@ -83,6 +89,7 @@ pub fn asteroid_spawn(
             AsteroidBundle {
                 physics: PhysicsBundle {
                     collider: Collider::cuboid(asteroid.scale * 0.5, asteroid.scale * 0.5),
+                    mass: ColliderMassProperties::Mass(5.0),
                     ..Default::default()
                 },
                 ..AsteroidBundle::from((

@@ -150,8 +150,8 @@ pub fn build_level(mut cmds: Commands, time: Res<Time>) {
             false => RoidPath::Two,
         };
 
-        let x = rng.gen_range(-960.0..960.0);
-        let y = rng.gen_range(-540.0..540.0);
+        let x = rng.gen_range(-850.0..850.0);
+        let y = rng.gen_range(-400.0..400.0);
         let scale = rng.gen_range(16.0..64.0);
         let rotation = rng.gen_range(0.0..(PI * 2.0));
 
