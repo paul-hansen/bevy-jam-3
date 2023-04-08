@@ -35,7 +35,7 @@ impl Command for SpawnPlayer {
                 self.network_owner,
                 Replication,
                 ActionState::<PlayerAction>::default(),
-                Weapon{
+                Weapon {
                     weapon_type: super::weapons::WeaponType::Laser { fire_rate: 1.5 },
                     ..default()
                 },

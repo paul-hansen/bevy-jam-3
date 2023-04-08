@@ -14,7 +14,7 @@ use bevy::prelude::*;
 use bevy::utils::HashMap;
 use bevy_prototype_lyon::draw::Stroke;
 use bevy_prototype_lyon::prelude::ShapeBundle;
-use bevy_rapier2d::prelude::{Velocity, Damping};
+use bevy_rapier2d::prelude::{Damping, Velocity};
 use bevy_replicon::prelude::*;
 use bevy_replicon::renet::{RenetClient, ServerEvent};
 use leafwing_input_manager::prelude::*;
@@ -168,8 +168,8 @@ impl PlayerBundle {
                 stroke: Stroke::new(color.color(), 3.0),
                 ..default()
             },
-            physics: PhysicsBundle{
-                damping: Damping{
+            physics: PhysicsBundle {
+                damping: Damping {
                     linear_damping: 0.4,
                     angular_damping: 1.0,
                 },

@@ -144,14 +144,14 @@ pub fn build_level(mut cmds: Commands, time: Res<Time>) {
     .insert(Replication::default());
 
     let mut rng = rand::thread_rng();
-    for _ in 0..35 {
+    for _ in 0..45 {
         let roid_path = match (rng.gen_range(0..10) % 2) == 0 {
             true => RoidPath::One,
             false => RoidPath::Two,
         };
 
-        let x = rng.gen_range(-600.0..600.0);
-        let y = rng.gen_range(-600.0..600.0);
+        let x = rng.gen_range(-960.0..960.0);
+        let y = rng.gen_range(-540.0..540.0);
         let scale = rng.gen_range(16.0..64.0);
         let rotation = rng.gen_range(0.0..(PI * 2.0));
 
