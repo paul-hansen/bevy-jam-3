@@ -1,6 +1,7 @@
 pub mod commands;
 #[cfg(feature = "bevy_editor_pls")]
 mod editor;
+pub mod matchmaking;
 pub mod util;
 
 use std::fmt::Debug;
@@ -20,6 +21,8 @@ use leafwing_input_manager::action_state::{ActionDiff, ActionState};
 use leafwing_input_manager::systems::generate_action_diffs;
 use leafwing_input_manager::Actionlike;
 use serde::{Deserialize, Serialize};
+
+use self::matchmaking::MatchmakingPlugin;
 
 pub const DEFAULT_PORT: u16 = 4761;
 pub const PROTOCOL_ID: u64 = 0;
@@ -90,6 +93,7 @@ impl Plugin for NetworkPlugin {
                 .build()
                 .set(ServerPlugin { tick_rate: 30 }),
         );
+        app.add_plugin(MatchmakingPlugin);
         app.register_type::<NetworkOwner>();
         app.register_type::<RoidPath>();
         app.replicate::<Transform>();
@@ -126,7 +130,7 @@ pub fn process_action_diffs<A: Actionlike + Debug, ID: Eq + Component + Clone + 
     for action_diff in action_diffs.iter() {
         let action_diff = &action_diff.event;
         for (mut action_state, id) in action_state_query.iter_mut() {
-            info!("{:?}", action_diff);
+            debug!("{:?}", action_diff);
             match action_diff {
                 ActionDiff::Pressed {
                     action,
