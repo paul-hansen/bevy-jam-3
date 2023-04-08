@@ -242,7 +242,7 @@ fn show_post_game_text(
                     text: Text::from_section(
                         win_text.0,
                         TextStyle {
-                            font: asset_server.load("VectorBattleFont/Vectorb.ttf"),
+                            font: asset_server.load("hyperspace_font/Hyperspace Bold.otf"),
                             font_size: 36.0,
                             color: win_text.1,
                         },
@@ -258,7 +258,7 @@ fn show_post_game_text(
                                 RestartCountdown::DEFAULT_RESTART_DELAY_SECONDS
                             ),
                             TextStyle {
-                                font: asset_server.load("VectorBattleFont/Vectorb.ttf"),
+                                font: asset_server.load("hyperspace_font/Hyperspace Bold.otf"),
                                 font_size: 24.0,
                                 color: Color::YELLOW,
                             },
