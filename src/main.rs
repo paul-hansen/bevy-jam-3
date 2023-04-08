@@ -34,6 +34,7 @@ mod game_manager;
 mod health;
 mod network;
 mod player;
+mod ui;
 
 fn main() {
     let mut app = App::new();
@@ -60,7 +61,10 @@ fn main() {
         .add_plugin(HealthPlugin)
         .add_plugin(bevy_kira_audio::AudioPlugin)
         .add_plugin(SqueezeAudioPlugin)
+        .add_plugin(ui::UiPlugin)
         .insert_resource(Msaa::Sample8);
+
+    app.register_type::<MainCamera>();
 
     if !app.is_plugin_added::<EguiPlugin>() {
         app.add_plugin(EguiPlugin);
@@ -71,9 +75,14 @@ fn main() {
     app.run();
 }
 
+#[derive(Component, Reflect, Default)]
+#[reflect(Component, Default)]
+pub struct MainCamera;
+
 fn setup(mut commands: Commands) {
     commands.spawn((
         Persist,
+        MainCamera,
         Camera2dBundle {
             camera: Camera {
                 hdr: true,
@@ -93,6 +102,7 @@ fn setup(mut commands: Commands) {
             },
             ..default()
         },
+        UiCameraConfig { show_ui: false },
         BloomSettings {
             composite_mode: BloomCompositeMode::Additive,
             ..default()
