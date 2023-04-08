@@ -1,3 +1,4 @@
+use crate::game_manager::GameState;
 use bevy::{prelude::*, utils::HashMap};
 use bevy_mod_reqwest::{ReqwestBytesResult, ReqwestClient, ReqwestRequest};
 use serde::{Deserialize, Serialize};
@@ -37,6 +38,7 @@ pub fn update_matchmaking_state(
     mut cmds: Commands,
     time: Res<Time>,
     client: ResMut<ReqwestClient>,
+    game_state: Res<State<GameState>>,
 ) {
     mm_res.timer.tick(time.delta());
 
@@ -64,10 +66,12 @@ pub fn update_matchmaking_state(
             };
         }
 
-        if let Ok(getreq) = client.0.get(url).build() {
-            cmds.spawn(ReqwestRequest(Some(getreq))).insert(GetLobbyReq);
-        } else {
-            warn!("Could not construct request to pull serverlist");
+        if game_state.0 == GameState::MainMenu {
+            if let Ok(getreq) = client.0.get(url).build() {
+                cmds.spawn(ReqwestRequest(Some(getreq))).insert(GetLobbyReq);
+            } else {
+                warn!("Could not construct request to pull serverlist");
+            }
         }
     }
 }
