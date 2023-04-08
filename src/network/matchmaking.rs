@@ -79,33 +79,39 @@ pub fn consume_matchmaking_responses(
     mut mm_res: ResMut<MatchmakingState>,
 ) {
     get_responses.iter().for_each(|(response, ent)| {
-        match serde_json::from_str::<HashMap<String, EphemeralMatchmakingLobby>>(
-            response.as_str().unwrap(),
-        ) {
-            Ok(res) => {
-                mm_res.server_list = res;
+        if let Some(response) = response.as_str() {
+            match serde_json::from_str::<HashMap<String, EphemeralMatchmakingLobby>>(response) {
+                Ok(res) => {
+                    mm_res.server_list = res;
+                }
+                Err(e) => {
+                    warn!(
+                        "Got error when deserializing server list: {} \n {}",
+                        e, response
+                    );
+                }
             }
-            Err(e) => {
-                warn!(
-                    "Got error when deserializing server list: {} \n {}",
-                    e,
-                    response.as_str().unwrap()
-                );
-            }
-        }
+        } else {
+            warn!("No response fetching server list");
+        };
 
         cmds.entity(ent).despawn_recursive();
     });
 
     post_responses.iter().for_each(|(response, ent)| {
-        match response.as_str().unwrap() {
-            "SUCCESS" => {
-                info!("Successfully Posted MM Lobby")
+        if let Some(response) = response.as_str() {
+            match response {
+                "SUCCESS" => {
+                    info!("Successfully Posted MM Lobby")
+                }
+                anything_else => {
+                    info!("NON SUCCESS: {}", anything_else)
+                }
             }
-            anything_else => {
-                info!("NON SUCCESS: {}", anything_else)
-            }
-        }
+            return;
+        } else {
+            warn!("No response submitting lobby to master server. Lobby will not be visible.");
+        };
 
         cmds.entity(ent).despawn_recursive();
     });
