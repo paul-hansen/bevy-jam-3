@@ -18,7 +18,6 @@ use bevy_rapier2d::prelude::{Damping, Velocity};
 use bevy_replicon::prelude::*;
 use bevy_replicon::renet::{RenetClient, ServerEvent};
 use leafwing_input_manager::prelude::*;
-use serde::__private::de;
 use serde::{Deserialize, Serialize};
 use std::fmt::Formatter;
 
