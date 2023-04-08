@@ -27,7 +27,7 @@ pub struct EphemeralMatchmakingLobby {
     #[serde(alias = "slotsOccupied")]
     pub slots_occupied: u8,
     #[serde(alias = "autoRestart")]
-    pub auto_resart: bool,
+    pub auto_restart: bool,
     #[serde(alias = "hasPassword")]
     pub has_password: bool,
     #[serde(alias = "lastUpdated")]
@@ -44,7 +44,7 @@ pub fn update_matchmaking_state(
     mm_res.timer.tick(time.delta());
 
     if mm_res.timer.just_finished() {
-        let url = "http://localhost:8091/api/v1/matchmaking/ephemeral/lobbies";
+        let url = "http://matchmaking.braymatter.com:8091/api/v1/matchmaking/ephemeral/lobbies";
 
         if let Some(hosted_lobby) = &mm_res.lobby {
             let Ok(json) = serde_json::to_string(&hosted_lobby) else {
@@ -113,7 +113,6 @@ pub fn consume_matchmaking_responses(
                     info!("NON SUCCESS: {}", anything_else)
                 }
             }
-            return;
         } else {
             warn!("No response submitting lobby to master server. Lobby will not be visible.");
         };

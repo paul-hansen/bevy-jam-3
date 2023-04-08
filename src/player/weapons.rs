@@ -89,8 +89,8 @@ impl Default for WeaponType {
 #[derive(Component, Reflect, Default, Copy, Clone, Debug)]
 #[reflect(Component, Default)]
 pub struct Weapon {
-    weapon_type: WeaponType,
-    last_fire: f32,
+    pub weapon_type: WeaponType,
+    pub last_fire: f32,
 }
 
 impl Weapon {
@@ -129,7 +129,7 @@ pub struct Laser;
 
 impl Laser {
     pub const UNITS_PER_SECOND: f32 = 1000.0;
-    pub const DAMAGE: f32 = 100.0;
+    pub const DAMAGE: f32 = 50.0;
     /// How much impulse should be applied to an object the laser hits?
     pub const DAMAGE_IMPULSE: f32 = 50.0;
 }

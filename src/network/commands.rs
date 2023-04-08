@@ -142,7 +142,7 @@ impl Command for Listen {
             name: "".to_string(),
             player_capacity: MAX_CLIENTS as u8,
             slots_occupied: 1,
-            auto_resart: true,
+            auto_restart: true,
             has_password: false,
             last_updated: 0,
         });

@@ -35,7 +35,10 @@ impl Command for SpawnPlayer {
                 self.network_owner,
                 Replication,
                 ActionState::<PlayerAction>::default(),
-                Weapon::default(),
+                Weapon{
+                    weapon_type: super::weapons::WeaponType::Laser { fire_rate: 1.5 },
+                    ..default()
+                },
                 Transform::from_translation(position.extend(0.0))
                     .with_rotation(Quat::from_rotation_z(rotation.to_radians())),
             ),

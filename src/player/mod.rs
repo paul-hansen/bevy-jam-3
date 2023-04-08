@@ -14,10 +14,11 @@ use bevy::prelude::*;
 use bevy::utils::HashMap;
 use bevy_prototype_lyon::draw::Stroke;
 use bevy_prototype_lyon::prelude::ShapeBundle;
-use bevy_rapier2d::prelude::Velocity;
+use bevy_rapier2d::prelude::{Velocity, Damping};
 use bevy_replicon::prelude::*;
 use bevy_replicon::renet::{RenetClient, ServerEvent};
 use leafwing_input_manager::prelude::*;
+use serde::__private::de;
 use serde::{Deserialize, Serialize};
 use std::fmt::Formatter;
 
@@ -165,6 +166,13 @@ impl PlayerBundle {
                     ..default()
                 },
                 stroke: Stroke::new(color.color(), 3.0),
+                ..default()
+            },
+            physics: PhysicsBundle{
+                damping: Damping{
+                    linear_damping: 0.4,
+                    angular_damping: 1.0,
+                },
                 ..default()
             },
             ..default()
