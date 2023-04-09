@@ -1,6 +1,8 @@
 use crate::game_manager::GameState;
+use crate::player::Player;
 use bevy::{prelude::*, utils::HashMap};
 use bevy_mod_reqwest::{ReqwestBytesResult, ReqwestClient, ReqwestRequest};
+use bevy_replicon::server::ServerSet;
 use serde::{Deserialize, Serialize};
 
 #[derive(Resource, Reflect)]
@@ -139,6 +141,21 @@ fn remove_lobby_info(mut matchmaking_state: ResMut<MatchmakingState>) {
     matchmaking_state.lobby = None;
 }
 
+fn update_lobby_info(mut matchmaking_state: ResMut<MatchmakingState>, query: Query<With<Player>>) {
+    let player_count = query.iter().count();
+    if player_count
+        != matchmaking_state
+            .lobby
+            .as_ref()
+            .map(|x| x.player_capacity as usize)
+            .unwrap_or_default()
+    {
+        if let Some(lobby) = matchmaking_state.lobby.as_mut() {
+            lobby.slots_occupied = player_count as u8;
+        }
+    }
+}
+
 pub struct MatchmakingPlugin;
 
 impl Plugin for MatchmakingPlugin {
@@ -153,5 +170,6 @@ impl Plugin for MatchmakingPlugin {
 
         // Remove lobby info so it doesn't keep notifying the master server.
         app.add_system(remove_lobby_info.in_schedule(OnEnter(GameState::MainMenu)));
+        app.add_system(update_lobby_info.in_set(ServerSet::Authority));
     }
 }
