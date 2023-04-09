@@ -3,11 +3,20 @@ use bevy::{prelude::*, utils::HashMap};
 use bevy_mod_reqwest::{ReqwestBytesResult, ReqwestClient, ReqwestRequest};
 use serde::{Deserialize, Serialize};
 
-#[derive(Resource, Default, Reflect)]
+#[derive(Resource, Reflect)]
 #[reflect(Resource)]
 pub struct MatchmakingState {
     pub lobby: Option<EphemeralMatchmakingLobby>,
     pub timer: Timer,
+}
+
+impl Default for MatchmakingState {
+    fn default() -> Self {
+        Self {
+            lobby: None,
+            timer: Timer::from_seconds(3.0, TimerMode::Repeating),
+        }
+    }
 }
 
 #[derive(Resource, Default, Reflect)]
@@ -126,11 +135,6 @@ pub fn consume_matchmaking_responses(
     });
 }
 
-pub fn initialize_matchmaking_poller(mut mm_res: ResMut<MatchmakingState>) {
-    info!("Initializing Matchmaking Poller");
-    mm_res.timer = Timer::from_seconds(3.0, TimerMode::Repeating);
-}
-
 fn remove_lobby_info(mut matchmaking_state: ResMut<MatchmakingState>) {
     matchmaking_state.lobby = None;
 }
@@ -144,7 +148,6 @@ impl Plugin for MatchmakingPlugin {
         app.register_type::<HashMap<String, EphemeralMatchmakingLobby>>();
         app.init_resource::<MatchmakingState>();
         app.init_resource::<ServerList>();
-        app.add_startup_systems((initialize_matchmaking_poller,));
         app.add_system(update_matchmaking_state);
         app.add_system(consume_matchmaking_responses);
 
