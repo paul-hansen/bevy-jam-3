@@ -1,7 +1,7 @@
 use crate::network::commands::NetworkCommandsExt;
 use crate::network::matchmaking::ServerList;
 use crate::network::DEFAULT_PORT;
-use crate::ui::{change_button_text_color, Menu, MenuUiContainer};
+use crate::ui::{change_button_text_color, ChangeStateOnClick, Menu, MenuUiContainer};
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use std::net::{IpAddr, Ipv4Addr};
@@ -59,17 +59,22 @@ pub fn setup_lobby_browser(
                 },
             ));
             child_builder
-                .spawn(ButtonBundle {
-                    background_color: BackgroundColor::from(Color::BLACK),
-                    ..default()
-                })
+                .spawn((
+                    ButtonBundle {
+                        background_color: BackgroundColor::from(Color::BLACK),
+                        ..default()
+                    },
+                    ChangeStateOnClick {
+                        state: Menu::JoinByIP,
+                    },
+                ))
                 .with_children(|cb| {
                     cb.spawn(TextBundle {
                         text: Text::from_section(
                             "Join by IP",
                             TextStyle {
                                 font: font.clone(),
-                                font_size: 32.0,
+                                font_size: 24.0,
                                 color: Color::YELLOW,
                             },
                         ),
