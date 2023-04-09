@@ -171,15 +171,7 @@ fn detect_laser_hits(
             true,
             QueryFilter::default().exclude_sensors(),
         ) {
-            // This is similar to `QueryPipeline::cast_ray` illustrated above except
-            // that it also returns the normal of the collider shape at the hit point.
-            let hit_point = intersection.point;
-            let hit_normal = intersection.normal;
             if network_owners.get(hit_entity) != Ok(owner) {
-                println!(
-                    "Entity {:?} hit at point {} with normal {}",
-                    hit_entity, hit_point, hit_normal
-                );
                 damaged_events.send(DamagedEvent {
                     entity: hit_entity,
                     amount: Laser::DAMAGE,

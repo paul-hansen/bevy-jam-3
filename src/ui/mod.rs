@@ -193,15 +193,12 @@ fn toggle_menu(
     if key_codes.just_released(KeyCode::Escape) {
         match game_state.0 {
             GameState::PreGame | GameState::Playing | GameState::PostGame => {
-                println!("test {menu_state:?}");
                 next_menu_state.set(match menu_state.0 {
                     Menu::Hidden => Menu::ConfirmQuitToMain,
                     _ => Menu::Hidden,
                 })
             }
-            _ => {
-                println!("test {:?}", game_state.0);
-            }
+            _ => {}
         }
     }
 }
@@ -302,7 +299,6 @@ fn resize_ui(
         .viewport_to_world_2d(&GlobalTransform::default(), Vec2::ZERO)
         .map(|d| Vec2::new(-d.x, -d.y) * 2.0)
         .unwrap_or(Vec2::splat(10.0));
-    println!("{} - {width} {height}", viewport_world_size);
 
     for camera in ui_camera_query.iter() {
         if let RenderTarget::Image(handle) = &camera.target {

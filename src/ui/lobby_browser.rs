@@ -134,7 +134,6 @@ pub fn handle_join_game_click(
     for (entity, interaction, join_game) in query.iter_mut() {
         match interaction {
             Interaction::Clicked => {
-                warn!("clicked");
                 if let Ok(ip) = IpAddr::from_str(&join_game.ip) {
                     commands.connect(ip, Ipv4Addr::new(0, 0, 0, 0).into(), DEFAULT_PORT);
                 };
