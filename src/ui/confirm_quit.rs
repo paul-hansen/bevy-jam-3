@@ -1,10 +1,6 @@
 use crate::network::commands::NetworkCommandsExt;
-use crate::ui::{MenuState, MenuUiContainer};
+use crate::ui::{Menu, MenuUiContainer};
 use bevy::prelude::*;
-
-#[derive(Component, Reflect, Default)]
-#[reflect(Component)]
-pub struct ConfirmQuit;
 
 pub fn setup_confirm_quit(
     mut commands: Commands,
@@ -15,7 +11,7 @@ pub fn setup_confirm_quit(
     let entity = commands
         .spawn((
             Name::new("ConfirmQuit"),
-            ConfirmQuit::default(),
+            Menu::ConfirmQuitToMain,
             NodeBundle {
                 style: Style {
                     padding: UiRect::all(Val::Px(10.0)),
@@ -42,13 +38,13 @@ pub fn setup_confirm_quit(
 pub fn confirm_quit_to_menu_update(
     mut commands: Commands,
     key_codes: Res<Input<KeyCode>>,
-    mut next_menu_state: ResMut<NextState<MenuState>>,
+    mut next_menu_state: ResMut<NextState<Menu>>,
 ) {
     if key_codes.just_released(KeyCode::Y) {
         commands.disconnect();
-        next_menu_state.set(MenuState::Hidden);
+        next_menu_state.set(Menu::Hidden);
     }
     if key_codes.just_released(KeyCode::N) {
-        next_menu_state.set(MenuState::Hidden);
+        next_menu_state.set(Menu::Hidden);
     }
 }

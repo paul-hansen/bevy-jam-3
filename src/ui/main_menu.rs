@@ -1,4 +1,4 @@
-use crate::ui::MenuUiContainer;
+use crate::ui::{Menu, MenuUiContainer};
 use bevy::prelude::*;
 
 #[derive(Component, Reflect, Default)]
@@ -10,7 +10,7 @@ pub fn setup_main_menu(mut commands: Commands, menu_ui: Query<Entity, With<MenuU
     let entity = commands
         .spawn((
             Name::new("MainMenu"),
-            MainMenu::default(),
+            Menu::Main,
             NodeBundle {
                 style: Style {
                     display: Display::None,

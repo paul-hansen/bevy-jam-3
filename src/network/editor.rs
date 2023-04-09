@@ -1,5 +1,5 @@
 use crate::game_manager::GameState;
-use crate::ui::MenuState;
+use crate::ui::Menu;
 use bevy::app::{App, Plugin};
 use bevy::ecs::system::SystemState;
 use bevy::prelude::*;
@@ -78,7 +78,7 @@ impl EditorWindow for StatesEditorWindow {
         });
         ui.push_id("menu_state", |ui| {
             ui.label("Menu State");
-            ui_for_state::<MenuState>(world, ui);
+            ui_for_state::<Menu>(world, ui);
         });
     }
 }

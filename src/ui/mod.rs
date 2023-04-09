@@ -1,12 +1,10 @@
-mod common_systems;
 mod confirm_quit;
 mod lobby_browser;
 mod main_menu;
 
 use crate::game_manager::{GameState, Persist};
-use crate::ui::common_systems::{set_display_flex, set_display_none};
-use crate::ui::confirm_quit::{confirm_quit_to_menu_update, setup_confirm_quit, ConfirmQuit};
-use crate::ui::lobby_browser::{setup_lobby_browser, LobbyBrowser};
+use crate::ui::confirm_quit::{confirm_quit_to_menu_update, setup_confirm_quit};
+use crate::ui::lobby_browser::setup_lobby_browser;
 use crate::ui::main_menu::{setup_main_menu, MainMenu};
 use crate::MainCamera;
 use bevy::core_pipeline::clear_color::ClearColorConfig;
@@ -20,8 +18,10 @@ use bevy::window::{PrimaryWindow, WindowResized};
 
 pub struct UiPlugin;
 
-#[derive(States, Hash, Eq, PartialEq, Copy, Clone, Default, Debug, Reflect)]
-pub enum MenuState {
+/// This is used as a state to determine the currently open menu, and a component to identify the
+/// root node of each menu
+#[derive(States, Hash, Eq, PartialEq, Copy, Clone, Default, Debug, Reflect, Component)]
+pub enum Menu {
     #[default]
     Hidden,
     Main,
@@ -31,38 +31,17 @@ pub enum MenuState {
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_state::<MenuState>();
+        app.add_state::<Menu>();
         app.register_type::<UiCamera>();
         app.register_type::<UiSprite>();
         app.register_type::<MenuUiRoot>();
         app.register_type::<MenuUiContainer>();
         app.register_type::<MainMenu>();
+        app.register_type::<Menu>();
         app.add_system(toggle_menu);
 
-        // Menu root
-        app.add_system(set_display_none::<MenuUiRoot>.in_schedule(OnEnter(MenuState::Hidden)));
-        app.add_system(set_display_flex::<MenuUiRoot>.in_schedule(OnExit(MenuState::Hidden)));
-
-        // Main menu
-        app.add_system(set_display_flex::<MainMenu>.in_schedule(OnEnter(MenuState::Main)));
-        app.add_system(set_display_none::<MainMenu>.in_schedule(OnExit(MenuState::Main)));
-
-        // Confirm Quit
-        app.add_system(
-            set_display_flex::<ConfirmQuit>.in_schedule(OnEnter(MenuState::ConfirmQuitToMain)),
-        );
-        app.add_system(
-            set_display_none::<ConfirmQuit>.in_schedule(OnExit(MenuState::ConfirmQuitToMain)),
-        );
-        app.add_system(confirm_quit_to_menu_update.in_set(OnUpdate(MenuState::ConfirmQuitToMain)));
-
-        // Lobby browser
-        app.add_system(
-            set_display_flex::<LobbyBrowser>.in_schedule(OnEnter(MenuState::LobbyBrowser)),
-        );
-        app.add_system(
-            set_display_none::<LobbyBrowser>.in_schedule(OnExit(MenuState::LobbyBrowser)),
-        );
+        app.add_system(update_menu_display);
+        app.add_system(confirm_quit_to_menu_update.in_set(OnUpdate(Menu::ConfirmQuitToMain)));
 
         app.add_startup_systems(
             (
@@ -77,6 +56,28 @@ impl Plugin for UiPlugin {
         );
         app.add_startup_systems((setup_ui_camera, resize_ui));
         app.add_system(resize_ui.run_if(on_event::<WindowResized>()));
+    }
+}
+
+fn update_menu_display(
+    menu_state: Res<State<Menu>>,
+    mut menus: Query<(&Menu, &mut Style), Without<MenuUiRoot>>,
+    mut root: Query<&mut Style, With<MenuUiRoot>>,
+) {
+    if let Ok(mut root_style) = root.get_single_mut() {
+        root_style.display = if menu_state.0 == Menu::Hidden {
+            Display::None
+        } else {
+            Display::Flex
+        }
+    }
+
+    for (menu, mut style) in menus.iter_mut() {
+        style.display = if *menu == menu_state.0 {
+            Display::Flex
+        } else {
+            Display::None
+        };
     }
 }
 
@@ -140,16 +141,16 @@ fn setup_menu_container(mut commands: Commands) {
 fn toggle_menu(
     key_codes: Res<Input<KeyCode>>,
     game_state: Res<State<GameState>>,
-    menu_state: Res<State<MenuState>>,
-    mut next_menu_state: ResMut<NextState<MenuState>>,
+    menu_state: Res<State<Menu>>,
+    mut next_menu_state: ResMut<NextState<Menu>>,
 ) {
     if key_codes.just_released(KeyCode::Escape) {
         match game_state.0 {
             GameState::PreGame | GameState::Playing | GameState::PostGame => {
                 println!("test {menu_state:?}");
                 next_menu_state.set(match menu_state.0 {
-                    MenuState::Hidden => MenuState::ConfirmQuitToMain,
-                    _ => MenuState::Hidden,
+                    Menu::Hidden => Menu::ConfirmQuitToMain,
+                    _ => Menu::Hidden,
                 })
             }
             _ => {
