@@ -1181,7 +1181,7 @@ dependencies = [
 [[package]]
 name = "bevy_replicon"
 version = "0.2.2"
-source = "git+https://github.com/paul-hansen/bevy_replicon.git?rev=94b363b1#94b363b1a960e3503045431e14a547654c7900bc"
+source = "git+https://github.com/paul-hansen/bevy_replicon.git?rev=0f5ad7ce#0f5ad7ce51d038635aba32bcf8ae9e03a5bd7e17"
 dependencies = [
  "bevy",
  "bevy_renet",
