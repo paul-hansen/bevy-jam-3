@@ -1180,8 +1180,9 @@ dependencies = [
 
 [[package]]
 name = "bevy_replicon"
-version = "0.2.2"
-source = "git+https://github.com/paul-hansen/bevy_replicon.git?rev=0f5ad7ce#0f5ad7ce51d038635aba32bcf8ae9e03a5bd7e17"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fc05c1d3879e4521ca31d6abbfaf3adb1298c7c5a44b376f80de910025d3b76e"
 dependencies = [
  "bevy",
  "bevy_renet",
@@ -4932,6 +4933,7 @@ dependencies = [
  "renet_visualizer",
  "serde",
  "serde_json",
+ "smallvec",
  "surf",
 ]
 

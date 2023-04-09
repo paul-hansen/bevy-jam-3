@@ -1,5 +1,6 @@
 use crate::game_manager::GameState;
 use crate::player::Player;
+use crate::ui::Menu;
 use bevy::{prelude::*, utils::HashMap};
 use bevy_mod_reqwest::{ReqwestBytesResult, ReqwestClient, ReqwestRequest};
 use bevy_replicon::server::ServerSet;
@@ -55,7 +56,7 @@ pub fn update_matchmaking_state(
     mut cmds: Commands,
     time: Res<Time>,
     client: ResMut<ReqwestClient>,
-    game_state: Res<State<GameState>>,
+    menu_state: Res<State<Menu>>,
 ) {
     mm_res.timer.tick(time.delta());
 
@@ -83,7 +84,7 @@ pub fn update_matchmaking_state(
             };
         }
 
-        if game_state.0 == GameState::MainMenu {
+        if menu_state.0 == Menu::LobbyBrowser {
             if let Ok(getreq) = client.0.get(url).build() {
                 cmds.spawn(ReqwestRequest(Some(getreq))).insert(GetLobbyReq);
             } else {

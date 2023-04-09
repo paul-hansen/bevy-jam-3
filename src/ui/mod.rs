@@ -1,10 +1,17 @@
 mod confirm_quit;
+mod create_game;
+mod focus;
+mod join_by_ip;
 mod lobby_browser;
 mod main_menu;
 
 use crate::game_manager::{GameState, Persist};
+use crate::network::matchmaking::{MatchmakingState, ServerList};
 use crate::ui::confirm_quit::{confirm_quit_to_menu_update, setup_confirm_quit};
-use crate::ui::lobby_browser::setup_lobby_browser;
+use crate::ui::create_game::draw_create_game;
+use crate::ui::focus::ui_focus_system;
+use crate::ui::join_by_ip::draw_join_by_ip;
+use crate::ui::lobby_browser::{handle_join_game_click, setup_lobby_browser, update_lobby_browser};
 use crate::ui::main_menu::{setup_main_menu, MainMenu};
 use crate::MainCamera;
 use bevy::core_pipeline::clear_color::ClearColorConfig;
@@ -14,6 +21,7 @@ use bevy::render::camera::{CameraRenderGraph, RenderTarget, ScalingMode};
 use bevy::render::render_resource::{
     Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
 };
+use bevy::ui::UiSystem;
 use bevy::window::{PrimaryWindow, WindowResized};
 
 pub struct UiPlugin;
@@ -25,6 +33,8 @@ pub enum Menu {
     #[default]
     Hidden,
     Main,
+    CreateGame,
+    JoinByIP,
     LobbyBrowser,
     ConfirmQuitToMain,
 }
@@ -38,10 +48,36 @@ impl Plugin for UiPlugin {
         app.register_type::<MenuUiContainer>();
         app.register_type::<MainMenu>();
         app.register_type::<Menu>();
+        app.register_type::<ChangeStateOnClick<Menu>>();
+        app.add_system(change_state_on_click::<Menu>);
+        app.register_type::<ChangeStateOnClick<GameState>>();
+        app.add_system(change_state_on_click::<GameState>);
         app.add_system(toggle_menu);
+        app.add_system(
+            ui_focus_system
+                .in_set(UiSystem::Focus)
+                .after(bevy::ui::ui_focus_system),
+        );
+        app.add_system(open_main_menu.in_schedule(OnEnter(GameState::MainMenu)));
+        app.add_system(hide_menu.in_schedule(OnExit(GameState::MainMenu)));
 
         app.add_system(update_menu_display);
-        app.add_system(confirm_quit_to_menu_update.in_set(OnUpdate(Menu::ConfirmQuitToMain)));
+        app.add_systems((
+            handle_join_game_click,
+            update_lobby_browser.run_if(run_once()),
+            update_lobby_browser
+                .run_if(resource_changed::<ServerList>())
+                .in_set(OnUpdate(Menu::LobbyBrowser)),
+        ));
+
+        app.add_systems((draw_create_game.in_set(OnUpdate(Menu::CreateGame)),));
+        app.add_systems((draw_join_by_ip.in_set(OnUpdate(Menu::JoinByIP)),));
+
+        app.add_system(
+            confirm_quit_to_menu_update
+                .run_if(resource_changed::<MatchmakingState>())
+                .in_set(OnUpdate(Menu::ConfirmQuitToMain)),
+        );
 
         app.add_startup_systems(
             (
@@ -56,7 +92,16 @@ impl Plugin for UiPlugin {
         );
         app.add_startup_systems((setup_ui_camera, resize_ui));
         app.add_system(resize_ui.run_if(on_event::<WindowResized>()));
+        app.add_system(button_hover);
     }
+}
+
+fn open_main_menu(mut menu_state: ResMut<NextState<Menu>>) {
+    menu_state.set(Menu::Main);
+}
+
+fn hide_menu(mut menu_state: ResMut<NextState<Menu>>) {
+    menu_state.set(Menu::Hidden);
 }
 
 fn update_menu_display(
@@ -116,7 +161,7 @@ fn setup_menu_container(mut commands: Commands) {
                 .spawn((NodeBundle {
                     background_color: BackgroundColor::from(Color::GREEN),
                     style: Style {
-                        padding: UiRect::all(Val::Px(4.0)),
+                        padding: UiRect::all(Val::Px(3.0)),
                         ..default()
                     },
                     ..default()
@@ -128,6 +173,7 @@ fn setup_menu_container(mut commands: Commands) {
                         NodeBundle {
                             background_color: BackgroundColor::from(Color::BLACK),
                             style: Style {
+                                padding: UiRect::all(Val::Px(6.0)),
                                 size: Size::all(Val::Percent(100.0)),
                                 ..default()
                             },
@@ -278,6 +324,56 @@ fn resize_ui(
                     sprite.custom_size = Some(viewport_world_size);
                 }
             }
+        }
+    }
+}
+
+pub fn button_hover(
+    query: Query<(Entity, &Interaction), Changed<Interaction>>,
+    children: Query<&Children>,
+    mut texts: Query<&mut Text>,
+) {
+    for (entity, interaction) in query.iter() {
+        match interaction {
+            Interaction::Clicked => {}
+            Interaction::Hovered => {
+                change_button_text_color(entity, &children, &mut texts, Color::ORANGE);
+            }
+            Interaction::None => {
+                change_button_text_color(entity, &children, &mut texts, Color::RED);
+            }
+        }
+    }
+}
+
+pub fn change_button_text_color(
+    button: Entity,
+    children: &Query<&Children>,
+    texts: &mut Query<&mut Text>,
+    color: Color,
+) {
+    children.iter_descendants(button).for_each(|e| {
+        if let Ok(mut text) = texts.get_mut(e) {
+            text.sections
+                .iter_mut()
+                .for_each(|section| section.style.color = color);
+        }
+    });
+}
+
+#[derive(Component, Default, Reflect)]
+#[reflect(Component, Default)]
+pub struct ChangeStateOnClick<S: States> {
+    pub state: S,
+}
+
+fn change_state_on_click<S: States>(
+    query: Query<(&Interaction, &ChangeStateOnClick<S>), Changed<Interaction>>,
+    mut next_state: ResMut<NextState<S>>,
+) {
+    for (interaction, change_state) in query.iter() {
+        if interaction == &Interaction::Clicked {
+            next_state.set(change_state.state.clone());
         }
     }
 }

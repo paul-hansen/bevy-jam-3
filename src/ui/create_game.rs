@@ -1,63 +1,34 @@
-use crate::network::commands::{Connect, Listen};
+use crate::network::commands::Listen;
 use crate::network::{NetworkInfo, DEFAULT_PORT};
-use bevy::prelude::{FromWorld, World};
-use egui::{Color32, Ui, Widget};
+use bevy::prelude::*;
+use bevy_egui::EguiContexts;
+use egui::{Align2, Color32, Ui, Widget};
 use std::net::{AddrParseError, IpAddr, Ipv4Addr};
 use std::str::FromStr;
 
-pub struct ConnectForm {
-    pub ip: String,
-    pub port: u16,
-    pub bind: String,
-    pub error: Option<String>,
-}
-
-impl ConnectForm {
-    pub fn validate(&mut self) -> Result<Connect, AddrParseError> {
-        Ok(Connect {
-            bind: IpAddr::from_str(self.bind.as_str()).map_err(|e| {
-                self.error = Some(e.to_string());
-                e
-            })?,
-            ip: IpAddr::from_str(self.ip.as_str()).map_err(|e| {
-                self.error = Some(e.to_string());
-                e
-            })?,
-            port: self.port,
-        })
-    }
-
-    pub fn draw(&mut self, ui: &mut Ui) {
-        ui.label("IP Address");
-        if ui.text_edit_singleline(&mut self.ip).changed() {
-            self.error = None;
+pub fn draw_create_game(
+    mut commands: Commands,
+    mut contexts: EguiContexts,
+    mut listen_form: Local<ListenForm>,
+    network_info: Res<NetworkInfo>,
+) {
+    if network_info.is_changed() {
+        if let Some(ip) = network_info.public_ip {
+            listen_form.ip = ip.to_string();
         }
-        ui.collapsing("Advanced", |ui| {
-            ui.label("Bind IP Address");
-            if ui.text_edit_singleline(&mut self.bind).changed() {
-                self.error = None;
-            }
-            ui.label("Port");
-            if egui::DragValue::new(&mut self.port).ui(ui).changed() {
-                self.error = None;
+    }
+    egui::Window::new("Create Game")
+        .auto_sized()
+        .collapsible(false)
+        .anchor(Align2::CENTER_CENTER, (0.0, 0.0))
+        .show(contexts.ctx_mut(), |ui| {
+            listen_form.draw(ui);
+            if ui.button("Host").clicked() {
+                if let Ok(listen) = listen_form.validate() {
+                    commands.add(listen);
+                }
             }
         });
-
-        if let Some(error_message) = &self.error {
-            ui.colored_label(Color32::RED, error_message);
-        }
-    }
-}
-
-impl Default for ConnectForm {
-    fn default() -> Self {
-        Self {
-            ip: Connect::default().ip.to_string(),
-            port: DEFAULT_PORT,
-            bind: Connect::default().bind.to_string(),
-            error: None,
-        }
-    }
 }
 
 pub struct ListenForm {
