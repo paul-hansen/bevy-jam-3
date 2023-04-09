@@ -43,7 +43,6 @@ pub struct GameManager;
 
 impl Plugin for GameManager {
     fn build(&self, app: &mut App) {
-        app.add_state::<GameState>();
         app.add_server_event::<GameEvent>();
         app.register_type::<RestartCountdown>();
         app.register_type::<PostGameUiRoot>();
@@ -59,6 +58,7 @@ impl Plugin for GameManager {
         app.add_systems(
             (build_level.run_if(is_server()),).in_schedule(OnEnter(GameState::Playing)),
         );
+        app.add_system(despawn_everything.in_schedule(OnEnter(GameState::MainMenu)));
         app.add_systems(
             (
                 despawn_everything.run_if(is_server()),

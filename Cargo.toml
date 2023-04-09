@@ -30,3 +30,6 @@ opt-level = 1
 # Enable high optimizations for dependencies (incl. Bevy), but not for our code:
 [profile.dev.package."*"]
 opt-level = 3
+
+[patch.crates-io]
+bevy_replicon = { git = "https://github.com/paul-hansen/bevy_replicon.git", rev = "94b363b1" }

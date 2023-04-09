@@ -6,7 +6,7 @@
 mod cli;
 
 use crate::cli::CliPlugin;
-use crate::game_manager::Persist;
+use crate::game_manager::{GameState, Persist};
 use crate::health::HealthPlugin;
 use crate::network::NetworkPlugin;
 use crate::player::PlayerPlugin;
@@ -46,7 +46,8 @@ fn main() {
         app.add_plugin(EditorPlugin::default());
     }
 
-    app.add_plugin(NetworkPlugin)
+    app.add_state::<GameState>()
+        .add_plugin(NetworkPlugin)
         .add_plugin(PlayerPlugin)
         .add_plugin(ShapePlugin)
         .add_plugin(ReqwestPlugin)

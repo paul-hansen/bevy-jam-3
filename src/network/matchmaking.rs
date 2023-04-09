@@ -126,6 +126,10 @@ pub fn initialize_matchmaking_poller(mut mm_res: ResMut<MatchmakingState>) {
     mm_res.timer = Timer::from_seconds(3.0, TimerMode::Repeating);
 }
 
+fn remove_lobby_info(mut matchmaking_state: ResMut<MatchmakingState>) {
+    matchmaking_state.lobby = None;
+}
+
 pub struct MatchmakingPlugin;
 
 impl Plugin for MatchmakingPlugin {
@@ -136,5 +140,8 @@ impl Plugin for MatchmakingPlugin {
         app.add_startup_systems((initialize_matchmaking_poller,));
         app.add_system(update_matchmaking_state);
         app.add_system(consume_matchmaking_responses);
+
+        // Remove lobby info so it doesn't keep notifying the master server.
+        app.add_system(remove_lobby_info.in_schedule(OnEnter(GameState::MainMenu)));
     }
 }

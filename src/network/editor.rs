@@ -1,4 +1,5 @@
 use crate::game_manager::GameState;
+use crate::ui::MenuState;
 use bevy::app::{App, Plugin};
 use bevy::ecs::system::SystemState;
 use bevy::prelude::*;
@@ -20,7 +21,7 @@ impl Plugin for EditorExtensionPlugin {
             RenetVisualizerStyle::default(),
         ));
         app.add_editor_window::<RenetEditorWindow>();
-        app.add_editor_window::<GameStateEditorWindow>();
+        app.add_editor_window::<StatesEditorWindow>();
     }
 }
 
@@ -64,13 +65,20 @@ fn server_ui<const N: usize>(
     }
 }
 
-pub struct GameStateEditorWindow;
+pub struct StatesEditorWindow;
 
-impl EditorWindow for GameStateEditorWindow {
+impl EditorWindow for StatesEditorWindow {
     type State = ();
-    const NAME: &'static str = "GameState";
+    const NAME: &'static str = "States";
 
     fn ui(world: &mut World, _cx: EditorWindowContext, ui: &mut Ui) {
-        ui_for_state::<GameState>(world, ui);
+        ui.push_id("game_state", |ui| {
+            ui.label("Game State");
+            ui_for_state::<GameState>(world, ui);
+        });
+        ui.push_id("menu_state", |ui| {
+            ui.label("Menu State");
+            ui_for_state::<MenuState>(world, ui);
+        });
     }
 }

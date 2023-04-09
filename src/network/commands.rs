@@ -16,6 +16,7 @@ use std::time::SystemTime;
 pub trait NetworkCommandsExt {
     fn connect(&mut self, ip: IpAddr, bind: IpAddr, port: u16);
     fn listen(&mut self, ip: IpAddr, bind: IpAddr, port: u16);
+    fn disconnect(&mut self);
 }
 
 impl<'w, 's> NetworkCommandsExt for Commands<'w, 's> {
@@ -25,6 +26,10 @@ impl<'w, 's> NetworkCommandsExt for Commands<'w, 's> {
 
     fn listen(&mut self, ip: IpAddr, bind: IpAddr, port: u16) {
         self.add(Listen { bind, port, ip });
+    }
+
+    fn disconnect(&mut self) {
+        self.add(Disconnect);
     }
 }
 
@@ -146,6 +151,28 @@ impl Command for Listen {
             has_password: false,
             last_updated: 0,
         });
+    }
+}
+
+pub struct Disconnect;
+
+impl Command for Disconnect {
+    fn write(self, world: &mut World) {
+        if let Some(mut server) = world.get_resource_mut::<RenetServer>() {
+            server.disconnect_clients();
+            world
+                .resource_mut::<NextState<GameState>>()
+                .set(GameState::MainMenu);
+        }
+
+        if let Some(mut client) = world.get_resource_mut::<RenetClient>() {
+            client.disconnect();
+            world
+                .resource_mut::<NextState<GameState>>()
+                .set(GameState::MainMenu);
+        }
+        world.remove_resource::<RenetServer>();
+        world.remove_resource::<RenetClient>();
     }
 }
 
