@@ -7,8 +7,13 @@ use serde::{Deserialize, Serialize};
 #[reflect(Resource)]
 pub struct MatchmakingState {
     pub lobby: Option<EphemeralMatchmakingLobby>,
-    pub server_list: HashMap<String, EphemeralMatchmakingLobby>,
     pub timer: Timer,
+}
+
+#[derive(Resource, Default, Reflect)]
+#[reflect(Resource)]
+pub struct ServerList {
+    pub servers: HashMap<String, EphemeralMatchmakingLobby>,
 }
 
 #[derive(Component)]
@@ -81,13 +86,13 @@ pub fn consume_matchmaking_responses(
     get_responses: Query<(&ReqwestBytesResult, Entity), With<GetLobbyReq>>,
     post_responses: Query<(&ReqwestBytesResult, Entity), With<PostLobbyReq>>,
     mut cmds: Commands,
-    mut mm_res: ResMut<MatchmakingState>,
+    mut server_list: ResMut<ServerList>,
 ) {
     get_responses.iter().for_each(|(response, ent)| {
         if let Some(response) = response.as_str() {
             match serde_json::from_str::<HashMap<String, EphemeralMatchmakingLobby>>(response) {
                 Ok(res) => {
-                    mm_res.server_list = res;
+                    server_list.servers = res;
                 }
                 Err(e) => {
                     warn!(
@@ -135,8 +140,10 @@ pub struct MatchmakingPlugin;
 impl Plugin for MatchmakingPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<MatchmakingState>();
+        app.register_type::<ServerList>();
         app.register_type::<HashMap<String, EphemeralMatchmakingLobby>>();
         app.init_resource::<MatchmakingState>();
+        app.init_resource::<ServerList>();
         app.add_startup_systems((initialize_matchmaking_poller,));
         app.add_system(update_matchmaking_state);
         app.add_system(consume_matchmaking_responses);
