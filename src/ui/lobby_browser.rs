@@ -59,27 +59,60 @@ pub fn setup_lobby_browser(
                 },
             ));
             child_builder
-                .spawn((
-                    ButtonBundle {
-                        background_color: BackgroundColor::from(Color::BLACK),
+                .spawn(NodeBundle {
+                    style: Style {
+                        flex_direction: FlexDirection::Row,
+                        justify_content: JustifyContent::SpaceBetween,
                         ..default()
                     },
-                    ChangeStateOnClick {
-                        state: Menu::JoinByIP,
-                    },
-                ))
-                .with_children(|cb| {
-                    cb.spawn(TextBundle {
-                        text: Text::from_section(
-                            "Join by IP",
-                            TextStyle {
-                                font: font.clone(),
-                                font_size: 24.0,
-                                color: Color::YELLOW,
+                    ..default()
+                })
+                .with_children(|child_builder| {
+                    child_builder
+                        .spawn((
+                            ButtonBundle {
+                                background_color: BackgroundColor::from(Color::BLACK),
+                                ..default()
                             },
-                        ),
-                        ..default()
-                    });
+                            ChangeStateOnClick {
+                                state: Menu::JoinByIP,
+                            },
+                        ))
+                        .with_children(|cb| {
+                            cb.spawn(TextBundle {
+                                text: Text::from_section(
+                                    "Join by IP",
+                                    TextStyle {
+                                        font: font.clone(),
+                                        font_size: 24.0,
+                                        color: Color::YELLOW,
+                                    },
+                                ),
+                                ..default()
+                            });
+                        });
+
+                    child_builder
+                        .spawn((
+                            ButtonBundle {
+                                background_color: BackgroundColor::from(Color::BLACK),
+                                ..default()
+                            },
+                            ChangeStateOnClick { state: Menu::Main },
+                        ))
+                        .with_children(|cb| {
+                            cb.spawn(TextBundle {
+                                text: Text::from_section(
+                                    "Back",
+                                    TextStyle {
+                                        font: font.clone(),
+                                        font_size: 24.0,
+                                        color: Color::YELLOW,
+                                    },
+                                ),
+                                ..default()
+                            });
+                        });
                 });
         })
         .id();
