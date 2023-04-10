@@ -2,7 +2,6 @@ pub mod commands;
 #[cfg(feature = "bevy_editor_pls")]
 mod editor;
 pub mod matchmaking;
-pub mod util;
 
 use std::fmt::Debug;
 use std::net::{IpAddr, Ipv4Addr};

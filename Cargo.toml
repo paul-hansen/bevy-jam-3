@@ -4,8 +4,34 @@ version = "0.1.2"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 
+
+[dependencies.bevy]
+version = "0.10"
+default-features = false
+features = [
+    "animation",
+    "bevy_asset",
+    "bevy_gilrs",
+    "bevy_scene",
+    "bevy_winit",
+    "bevy_core_pipeline",
+    "bevy_pbr",
+    "bevy_gltf",
+    "bevy_render",
+    "bevy_sprite",
+    "bevy_text",
+    "bevy_ui",
+    "png",
+    "hdr",
+    "ktx2",
+    "zstd",
+    "x11",
+    "filesystem_watcher",
+    "tonemapping_luts",
+    "mp3"
+]
+
 [dependencies]
-bevy = { version = "0.10", features = ["mp3"] }
 bevy_editor_pls = { version = "0.4.0", features = ["highlight_changes"], optional = true }
 bevy_replicon = "0.2.3"
 clap = { version = "4.2.1", features = ["derive"] }
