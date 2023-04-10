@@ -9,7 +9,7 @@ use std::net::{IpAddr, Ipv4Addr};
 use crate::asteroid::Asteroid;
 use crate::bundles::lyon_rendering::roid_paths::RoidPath;
 use crate::game_manager::GameState;
-use crate::player::{Player, PlayerAction};
+use crate::player::{Player, PlayerAction, Thruster};
 use bevy::prelude::*;
 use bevy::tasks::{AsyncComputeTaskPool, Task};
 use bevy_rapier2d::prelude::Velocity;
@@ -101,6 +101,7 @@ impl Plugin for NetworkPlugin {
         app.replicate::<NetworkOwner>();
         app.replicate::<Asteroid>();
         app.replicate::<Velocity>();
+        app.replicate::<Thruster>();
         app.add_system(log_network_events);
         app.add_system(
             advance_to_playing_on_connected_and_replication

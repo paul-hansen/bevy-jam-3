@@ -34,6 +34,7 @@ impl Plugin for PlayerPlugin {
         app.add_plugin(WeaponsPlugin);
         app.register_type::<PlayerColor>();
         app.register_type::<Players>();
+        app.register_type::<Thruster>();
         app.insert_resource(Players::default());
         app.register_type::<Player>();
         app.add_systems(
@@ -236,7 +237,7 @@ impl PlayerBundle {
     }
 }
 
-#[derive(Component, Default)]
+#[derive(Component, Default, Reflect, FromReflect)]
 pub struct Thruster {
     pub val: f32,
 }
@@ -244,6 +245,7 @@ pub struct Thruster {
 pub struct ThrusterBundle {
     lyon_render: LyonRenderBundle,
     thruster: Thruster,
+    replicate: Replication,
 }
 
 impl ThrusterBundle {
@@ -260,6 +262,7 @@ impl ThrusterBundle {
                 fill: Fill::color(p_color.color()),
             },
             thruster: Thruster { val: 0.0 },
+            replicate: Replication
         }
     }
 }
