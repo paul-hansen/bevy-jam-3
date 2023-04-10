@@ -4,6 +4,7 @@
 // Feel free to delete this line.
 #![allow(clippy::too_many_arguments, clippy::type_complexity)]
 mod cli;
+pub mod powerup;
 
 use crate::cli::CliPlugin;
 use crate::game_manager::Persist;
