@@ -120,6 +120,10 @@ pub fn is_server() -> impl FnMut(Option<Res<RenetServer>>) -> bool + Clone {
     resource_exists::<RenetServer>()
 }
 
+pub fn is_client() -> impl FnMut(Option<Res<RenetClient>>) -> bool + Clone {
+    move |res: Option<Res<RenetClient>>| res.is_some()
+}
+
 /// This is the same as [`leafwing_input_manager::systems::process_action_diffs`] but
 /// uses [`FromClient`] to read the events
 pub fn process_action_diffs<A: Actionlike + Debug, ID: Eq + Component + Clone + Debug>(

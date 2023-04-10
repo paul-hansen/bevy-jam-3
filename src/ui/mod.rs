@@ -4,18 +4,23 @@ mod focus;
 mod join_by_ip;
 mod lobby_browser;
 mod main_menu;
+mod pre_game;
 
 use crate::game_manager::{GameState, Persist};
+use crate::network::commands::Disconnect;
 use crate::network::matchmaking::{MatchmakingState, ServerList};
+use crate::network::{is_client, is_server};
 use crate::ui::confirm_quit::{confirm_quit_to_menu_update, setup_confirm_quit};
 use crate::ui::create_game::draw_create_game;
 use crate::ui::focus::ui_focus_system;
 use crate::ui::join_by_ip::draw_join_by_ip;
 use crate::ui::lobby_browser::{handle_join_game_click, setup_lobby_browser, update_lobby_browser};
-use crate::ui::main_menu::{setup_main_menu, MainMenu};
+use crate::ui::main_menu::setup_main_menu;
+use crate::ui::pre_game::setup_pre_game;
 use crate::MainCamera;
 use bevy::core_pipeline::clear_color::ClearColorConfig;
 use bevy::core_pipeline::core_2d;
+use bevy::ecs::system::Command;
 use bevy::prelude::*;
 use bevy::render::camera::{CameraRenderGraph, RenderTarget, ScalingMode};
 use bevy::render::render_resource::{
@@ -36,6 +41,7 @@ pub enum Menu {
     CreateGame,
     JoinByIP,
     LobbyBrowser,
+    PreGame,
     ConfirmQuitToMain,
 }
 
@@ -46,20 +52,34 @@ impl Plugin for UiPlugin {
         app.register_type::<UiSprite>();
         app.register_type::<MenuUiRoot>();
         app.register_type::<MenuUiContainer>();
-        app.register_type::<MainMenu>();
         app.register_type::<Menu>();
         app.register_type::<ChangeStateOnClick<Menu>>();
         app.add_system(change_state_on_click::<Menu>);
         app.register_type::<ChangeStateOnClick<GameState>>();
         app.add_system(change_state_on_click::<GameState>);
         app.add_system(toggle_menu);
+        app.add_system(command_on_click::<Disconnect>);
         app.add_system(
             ui_focus_system
                 .in_set(UiSystem::Focus)
                 .after(bevy::ui::ui_focus_system),
         );
         app.add_system(open_main_menu.in_schedule(OnEnter(GameState::MainMenu)));
-        app.add_system(hide_menu.in_schedule(OnExit(GameState::MainMenu)));
+
+        // Show the pregame ui for servers
+        app.add_system(
+            open_pregame
+                .run_if(is_server())
+                .in_schedule(OnEnter(GameState::PreGame)),
+        );
+        // Clients pregame step doesn't currently progress, hide the menus for now
+        app.add_system(
+            hide_menu
+                .run_if(is_client())
+                .in_schedule(OnExit(GameState::MainMenu)),
+        );
+
+        app.add_system(hide_menu.in_schedule(OnExit(GameState::PreGame)));
 
         app.add_system(update_menu_display);
         app.add_systems((
@@ -87,6 +107,7 @@ impl Plugin for UiPlugin {
                 setup_main_menu,
                 setup_lobby_browser,
                 setup_confirm_quit,
+                setup_pre_game,
             )
                 .chain(),
         );
@@ -98,6 +119,10 @@ impl Plugin for UiPlugin {
 
 fn open_main_menu(mut menu_state: ResMut<NextState<Menu>>) {
     menu_state.set(Menu::Main);
+}
+
+fn open_pregame(mut menu_state: ResMut<NextState<Menu>>) {
+    menu_state.set(Menu::PreGame);
 }
 
 fn hide_menu(mut menu_state: ResMut<NextState<Menu>>) {
@@ -370,6 +395,22 @@ fn change_state_on_click<S: States>(
     for (interaction, change_state) in query.iter() {
         if interaction == &Interaction::Clicked {
             next_state.set(change_state.state.clone());
+        }
+    }
+}
+
+#[derive(Component)]
+pub struct CommandOnClick<C: Command + Send + Sync + Clone> {
+    pub command: C,
+}
+
+fn command_on_click<C: Command + Send + Sync + Clone>(
+    mut commands: Commands,
+    query: Query<(&Interaction, &CommandOnClick<C>), Changed<Interaction>>,
+) {
+    for (interaction, change_state) in query.iter() {
+        if interaction == &Interaction::Clicked {
+            commands.add(change_state.command.clone())
         }
     }
 }

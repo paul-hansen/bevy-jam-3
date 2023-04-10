@@ -154,10 +154,12 @@ impl Command for Listen {
     }
 }
 
+#[derive(Debug, Default, Clone)]
 pub struct Disconnect;
 
 impl Command for Disconnect {
     fn write(self, world: &mut World) {
+        debug!("Disconnecting");
         if let Some(mut server) = world.get_resource_mut::<RenetServer>() {
             server.disconnect_clients();
             world
