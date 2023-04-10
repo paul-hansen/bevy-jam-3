@@ -1,7 +1,7 @@
 use crate::health::Health;
 use crate::network::NetworkOwner;
 use crate::player::weapons::Weapon;
-use crate::player::{Player, PlayerAction, PlayerColor, PlayerColors};
+use crate::player::{Player, PlayerAction, PlayerColor, Players};
 use bevy::ecs::system::{Command, Spawn};
 use bevy::prelude::*;
 use bevy_replicon::prelude::Replication;
@@ -12,11 +12,13 @@ pub struct SpawnPlayer {
     pub network_owner: NetworkOwner,
 }
 
-const SPAWN_LOCATIONS: [(Vec2, f32); 4] = [
+const SPAWN_LOCATIONS: [(Vec2, f32); 6] = [
     (Vec2::new(440.0, 350.0), 135.0),
     (Vec2::new(-440.0, -350.0), -45.0),
     (Vec2::new(440.0, -350.0), 45.0),
     (Vec2::new(-440.0, 350.0), -135.0),
+    (Vec2::new(0.0, 350.0), 180.0),
+    (Vec2::new(0.0, -350.0), 0.0),
 ];
 
 impl Command for SpawnPlayer {
@@ -24,8 +26,8 @@ impl Command for SpawnPlayer {
         let (position, rotation) = SPAWN_LOCATIONS[self.color as usize];
 
         world
-            .resource_mut::<PlayerColors>()
-            .colors_by_client_id
+            .resource_mut::<Players>()
+            .colors
             .insert(self.network_owner.0, self.color);
 
         Spawn {
@@ -44,6 +46,10 @@ impl Command for SpawnPlayer {
             ),
         }
         .write(world);
+
+        world
+            .resource_mut::<Players>()
+            .insert(self.color, self.network_owner.0);
     }
 }
 

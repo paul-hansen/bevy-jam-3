@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::network::{is_server, NetworkOwner};
 use crate::player::commands::PlayerCommands;
-use crate::player::{Player, PlayerColor, PlayerColors};
+use crate::player::{Player, PlayerColor, Players};
 use crate::{
     arena::{Arena, Force},
     asteroid::{asteroid_spawn, Asteroid},
@@ -271,12 +271,12 @@ fn despawn_everything(mut commands: Commands, query: Query<Entity, PersistentRoo
 fn reload_with_current_players(
     mut commands: Commands,
     server: Res<RenetServer>,
-    player_colors: Res<PlayerColors>,
+    player_colors: Res<Players>,
 ) {
     commands.spawn_player(PlayerColor::Red, NetworkOwner(SERVER_ID));
     for client_id in server.clients_id() {
-        if let Some(color) = player_colors.colors_by_client_id.get(&client_id) {
-            commands.spawn_player(*color, NetworkOwner(client_id));
+        if let Some(color) = player_colors.color(client_id) {
+            commands.spawn_player(color, NetworkOwner(client_id));
         }
     }
 }

@@ -26,7 +26,7 @@ use self::matchmaking::MatchmakingPlugin;
 
 pub const DEFAULT_PORT: u16 = 4761;
 pub const PROTOCOL_ID: u64 = 0;
-pub const MAX_CLIENTS: usize = 16;
+pub const MAX_CLIENTS: usize = 6;
 pub const MAX_MESSAGE_SIZE: u64 = 40000;
 
 #[derive(Resource)]
