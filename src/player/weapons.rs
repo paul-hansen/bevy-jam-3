@@ -162,7 +162,7 @@ impl Weapon {
                     let mut rot;
 
                     for _ in 0.. count {
-                        rot = rng.gen_range(-TAU/4.0 .. TAU/4.0);
+                        rot = rng.gen_range(-TAU/6.0 .. TAU/6.0);
                         t.rotate_z(rot);
 
                         commands.spawn((
