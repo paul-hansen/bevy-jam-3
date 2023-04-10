@@ -238,6 +238,7 @@ impl PlayerBundle {
 }
 
 #[derive(Component, Default, Reflect, FromReflect)]
+#[reflect(Default, Component)]
 pub struct Thruster {
     pub val: f32,
 }
