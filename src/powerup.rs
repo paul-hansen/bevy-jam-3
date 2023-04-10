@@ -5,7 +5,11 @@ use bevy_replicon::replication_core::{AppReplicationExt, Replication};
 
 use crate::{
     bundles::{
-        lyon_rendering::{get_path_from_verts, powerups::{RAPIDFIRE_PATH, SCATTERGUN_PATH}, LyonRenderBundle},
+        lyon_rendering::{
+            get_path_from_verts,
+            powerups::{RAPIDFIRE_PATH, SCATTERGUN_PATH},
+            LyonRenderBundle,
+        },
         PhysicsBundle,
     },
     game_manager::GameState,
@@ -83,10 +87,10 @@ pub fn spawn_client_powerup(
 ) {
     added.iter().for_each(|(ent, transform, powerup)| {
         info!("Spawning Client Powerup");
-        let path = match powerup{
+        let path = match powerup {
             PowerUp::RapidFire => RAPIDFIRE_PATH.to_vec(),
             PowerUp::Scattergun => SCATTERGUN_PATH.to_vec(),
-            _ => RAPIDFIRE_PATH.to_vec()
+            _ => RAPIDFIRE_PATH.to_vec(),
         };
         cmds.entity(ent)
             .insert(PowerUpClientBundle {
@@ -124,19 +128,22 @@ pub fn collect_powerups(
                         player.powerup = Some(*powerup);
                         player.debuff = Some(*debuff);
 
-                        match powerup{
+                        match powerup {
                             PowerUp::Scattergun => {
-                                *weapon = Weapon{
-                                    weapon_type: WeaponType::Scattergun { fire_rate: 1.5, count: 7 },
+                                *weapon = Weapon {
+                                    weapon_type: WeaponType::Scattergun {
+                                        fire_rate: 1.5,
+                                        count: 7,
+                                    },
                                     ..default()
                                 }
-                            },
+                            }
                             PowerUp::RapidFire => {
-                                *weapon = Weapon{
+                                *weapon = Weapon {
                                     weapon_type: WeaponType::Laser { fire_rate: 10.0 },
                                     ..Default::default()
                                 };
-                            },
+                            }
                             _ => {}
                         }
 

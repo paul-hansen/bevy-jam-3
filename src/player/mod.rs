@@ -2,6 +2,7 @@ pub mod commands;
 pub mod weapons;
 
 use crate::arena::ArenaResident;
+use crate::bundles::lyon_rendering::ship_parts::THRUSTER_JET;
 use crate::bundles::lyon_rendering::ship_paths::SHIP_PATH;
 use crate::bundles::lyon_rendering::{get_path_from_verts, LyonRenderBundle};
 use crate::bundles::PhysicsBundle;
@@ -14,12 +15,13 @@ use bevy::math::Vec3Swizzles;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 use bevy_prototype_lyon::draw::Stroke;
-use bevy_prototype_lyon::prelude::ShapeBundle;
+use bevy_prototype_lyon::prelude::{Fill, ShapeBundle};
 use bevy_rapier2d::prelude::{Damping, Velocity};
 use bevy_replicon::prelude::*;
 use bevy_replicon::renet::{RenetClient, ServerEvent};
 use leafwing_input_manager::prelude::*;
 use serde::{Deserialize, Serialize};
+use std::f32::consts::PI;
 use std::fmt::Formatter;
 
 use self::weapons::DamagedEvent;
@@ -41,6 +43,7 @@ impl Plugin for PlayerPlugin {
         app.add_system(despawn_on_player_disconnect);
         app.add_systems((pregame_listen_for_player_connect,).in_set(OnUpdate(GameState::PreGame)));
         app.add_system(insert_player_bundle);
+        app.add_system(handle_thruster);
     }
 }
 
@@ -233,6 +236,40 @@ impl PlayerBundle {
     }
 }
 
+#[derive(Component, Default)]
+pub struct Thruster {
+    pub val: f32,
+}
+#[derive(Bundle, Default)]
+pub struct ThrusterBundle {
+    lyon_render: LyonRenderBundle,
+    thruster: Thruster,
+}
+
+impl ThrusterBundle {
+    pub fn with_color(p_color: PlayerColor) -> Self {
+
+        ThrusterBundle {
+            lyon_render: LyonRenderBundle {
+                shape_render: ShapeBundle {
+                    path: get_path_from_verts(&THRUSTER_JET, Vec2::splat(24.0)),
+                    transform: Transform::from_rotation(Quat::from_rotation_z(PI)).with_translation(Vec3::new(0.0, -24.0, 0.0)),
+                    ..default()
+                },
+                stroke: Stroke::color(p_color.color()),
+                fill: Fill::color(p_color.color()),
+            },
+            thruster: Thruster { val: 0.0 },
+        }
+    }
+}
+
+fn handle_thruster(mut thrusters: Query<(&mut Transform, &Thruster)>, time: Res<Time>){
+    for (mut transform, thruster) in thrusters.iter_mut() {
+        transform.scale.y = thruster.val * ((time.elapsed_seconds_wrapped() * 20.0).sin().abs().clamp(0.5, 1.0));
+    }
+}
+
 /// Handle Player connection while in game
 fn spawn_player_on_connected(
     mut commands: Commands,
@@ -320,6 +357,9 @@ fn insert_player_bundle(
 ) {
     for (entity, player, client_id, transform) in query.iter() {
         info!("Inserting Player bundle for player: {}", player);
+        let thruster_entity = commands
+            .spawn(ThrusterBundle::with_color(player.color))
+            .id();
         let player_entity = commands
             .entity(entity)
             .insert(PhysicsBundle::default())
@@ -328,6 +368,7 @@ fn insert_player_bundle(
                 bundle.lyon.shape_render.transform = *transform;
                 bundle
             })
+            .insert_children(0, &[thruster_entity])
             .id();
 
         if let Some(client) = &client {
@@ -353,21 +394,33 @@ pub fn player_actions(
             &Transform,
             &ActionState<PlayerAction>,
             &mut Velocity,
+            Entity,
         ),
         With<Player>,
     >,
+    mut thrusters: Query<(&Parent, &mut Thruster)>,
     time: Res<Time>,
 ) {
-    for (player, transform, action_state, mut velocity) in query.iter_mut() {
+    for (player, transform, action_state, mut velocity, entity) in query.iter_mut() {
         if action_state.pressed(PlayerAction::Thrust) {
             let forward = transform.up();
 
             //TODO: There's only one debuff, obviously this needs to be moved to a match at some point
             match player.debuff {
-                Some(Debuff::Slowed) => {},
-                None => { velocity.linvel += forward.xy() * time.delta_seconds() * 50.0 },
-                _ => { velocity.linvel += forward.xy() * time.delta_seconds() * 50.0 },
+                Some(Debuff::Slowed) => {
+                    if let Some((_parent, mut thruster)) = thrusters.iter_mut().find(|(parent, _thruster)|{parent.get() == entity}){
+                        thruster.val = (thruster.val - time.delta_seconds()).min(1.0).max(0.0);
+                    }
+                }
+                _ => {
+                    velocity.linvel += forward.xy() * time.delta_seconds() * 50.0;
+                    if let Some((_parent, mut thruster)) = thrusters.iter_mut().find(|(parent, _thruster)|{parent.get() == entity}){
+                        thruster.val = (thruster.val + time.delta_seconds()).min(1.0).max(0.0);
+                    }
+                },
             }
+        }else if let Some((_parent, mut thruster)) = thrusters.iter_mut().find(|(parent, _thruster)|{parent.get() == entity}){
+            thruster.val = (thruster.val - time.delta_seconds()).min(1.0).max(0.0);
         }
         if action_state.pressed(PlayerAction::TurnRight) {
             velocity.angvel -= 7.0 * time.delta_seconds();

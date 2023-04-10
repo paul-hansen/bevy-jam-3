@@ -60,7 +60,9 @@ pub fn spawn_bundle_on_laser_added(
             return;
         };
 
-        audio.play(asset_server.load("laserShoot.mp3")).with_playback_rate(thread_rng().gen_range(0.75 .. 1.125));
+        audio
+            .play(asset_server.load("laserShoot.mp3"))
+            .with_playback_rate(thread_rng().gen_range(0.75..1.125));
 
         entcmds.insert(LaserBundle::default());
     }
@@ -109,7 +111,7 @@ pub enum WeaponType {
     Scattergun {
         fire_rate: f32,
         count: u8,
-    }
+    },
 }
 
 impl Default for WeaponType {
@@ -150,7 +152,7 @@ impl Weapon {
                     ));
                     self.last_fire = time.elapsed_seconds_wrapped();
                 }
-            },
+            }
             WeaponType::Scattergun { fire_rate, count } => {
                 let seconds_between_fire = 1.0 / fire_rate;
                 let time_since_last_fire = time.elapsed_seconds_wrapped() - self.last_fire;
@@ -161,8 +163,8 @@ impl Weapon {
                     let mut t = transform;
                     let mut rot;
 
-                    for _ in 0.. count {
-                        rot = rng.gen_range(-TAU/3.0 .. TAU/3.0);
+                    for _ in 0..count {
+                        rot = rng.gen_range(-TAU / 3.0..TAU / 3.0);
                         t.rotate_z(rot);
 
                         commands.spawn((
