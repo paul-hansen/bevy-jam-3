@@ -10,7 +10,10 @@ use crate::{
     },
     game_manager::GameState,
     network::is_server,
-    player::{Player, weapons::{Weapon, WeaponType}},
+    player::{
+        weapons::{Weapon, WeaponType},
+        Player,
+    },
 };
 
 #[derive(Component, Reflect, Copy, Default, FromReflect, Debug, Clone)]
@@ -115,7 +118,7 @@ pub fn collect_powerups(
                     if let Ok((_entity, mut player, mut weapon)) = players.get_mut(e) {
                         player.powerup = Some(*powerup);
                         player.debuff = Some(*debuff);
-                        *weapon = Weapon{
+                        *weapon = Weapon {
                             weapon_type: WeaponType::Laser { fire_rate: 10.0 },
                             ..Default::default()
                         };

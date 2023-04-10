@@ -347,7 +347,15 @@ fn insert_player_bundle(
 }
 
 pub fn player_actions(
-    mut query: Query<(&Player, &Transform, &ActionState<PlayerAction>, &mut Velocity), With<Player>>,
+    mut query: Query<
+        (
+            &Player,
+            &Transform,
+            &ActionState<PlayerAction>,
+            &mut Velocity,
+        ),
+        With<Player>,
+    >,
     time: Res<Time>,
 ) {
     for (player, transform, action_state, mut velocity) in query.iter_mut() {
@@ -357,7 +365,6 @@ pub fn player_actions(
             //TODO: There's only one debuff, obviously this needs to be moved to a match at some point
             if player.debuff.is_none() {
                 velocity.linvel += forward.xy() * time.delta_seconds() * 50.0;
-
             }
         }
         if action_state.pressed(PlayerAction::TurnRight) {
