@@ -9,6 +9,7 @@ use crate::game_manager::GameState;
 use crate::network::NetworkOwner;
 use crate::player::commands::PlayerCommands;
 use crate::player::weapons::WeaponsPlugin;
+use crate::powerup::{Debuff, PowerUp};
 use bevy::math::Vec3Swizzles;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
@@ -83,6 +84,8 @@ impl PlayerAction {
 #[reflect(Component, Default)]
 pub struct Player {
     pub color: PlayerColor,
+    pub powerup: Option<PowerUp>,
+    pub debuff: Option<Debuff>,
 }
 
 impl std::fmt::Display for Player {
@@ -344,13 +347,18 @@ fn insert_player_bundle(
 }
 
 pub fn player_actions(
-    mut query: Query<(&Transform, &ActionState<PlayerAction>, &mut Velocity), With<Player>>,
+    mut query: Query<(&Player, &Transform, &ActionState<PlayerAction>, &mut Velocity), With<Player>>,
     time: Res<Time>,
 ) {
-    for (transform, action_state, mut velocity) in query.iter_mut() {
+    for (player, transform, action_state, mut velocity) in query.iter_mut() {
         if action_state.pressed(PlayerAction::Thrust) {
             let forward = transform.up();
-            velocity.linvel += forward.xy() * time.delta_seconds() * 50.0;
+
+            //TODO: There's only one debuff, obviously this needs to be moved to a match at some point
+            if player.debuff.is_none() {
+                velocity.linvel += forward.xy() * time.delta_seconds() * 50.0;
+
+            }
         }
         if action_state.pressed(PlayerAction::TurnRight) {
             velocity.angvel -= 7.0 * time.delta_seconds();

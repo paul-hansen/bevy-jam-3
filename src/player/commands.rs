@@ -32,7 +32,7 @@ impl Command for SpawnPlayer {
 
         Spawn {
             bundle: (
-                Player { color: self.color },
+                Player { color: self.color, ..Default::default() },
                 Health::default(),
                 self.network_owner,
                 Replication,

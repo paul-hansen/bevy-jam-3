@@ -10,10 +10,10 @@ use crate::{
     },
     game_manager::GameState,
     network::is_server,
-    player::Player,
+    player::{Player, weapons::{Weapon, WeaponType}},
 };
 
-#[derive(Component, Reflect, Default, Debug, Clone)]
+#[derive(Component, Reflect, Copy, Default, FromReflect, Debug, Clone)]
 #[reflect(Component, Default)]
 pub enum PowerUp {
     HitherThither,
@@ -23,7 +23,7 @@ pub enum PowerUp {
     Shield,
 }
 
-#[derive(Component, Default, Reflect, Debug, Clone)]
+#[derive(Component, Default, Copy, FromReflect, Reflect, Debug, Clone)]
 #[reflect(Component, Default)]
 pub enum Debuff {
     #[default]
@@ -99,7 +99,7 @@ pub fn spawn_client_powerup(
 pub fn collect_powerups(
     rapier_context: Res<RapierContext>,
     powerups: Query<(&PowerUp, &Debuff, &Collider, &Transform, Entity), Without<Player>>,
-    players: Query<Entity, With<Player>>,
+    mut players: Query<(Entity, &mut Player, &mut Weapon), With<Player>>,
     mut cmds: Commands,
 ) {
     powerups
@@ -112,10 +112,13 @@ pub fn collect_powerups(
                 collider,
                 QueryFilter::default(),
                 |e| {
-                    if let Ok(entity) = players.get(e) {
-                        cmds.entity(entity)
-                            .insert(powerup.clone())
-                            .insert(debuff.clone());
+                    if let Ok((_entity, mut player, mut weapon)) = players.get_mut(e) {
+                        player.powerup = Some(*powerup);
+                        player.debuff = Some(*debuff);
+                        *weapon = Weapon{
+                            weapon_type: WeaponType::Laser { fire_rate: 10.0 },
+                            ..Default::default()
+                        };
                         cmds.entity(powerup_ent).despawn_recursive();
                         return false;
                     }
@@ -130,6 +133,9 @@ pub struct PowerupPlugin;
 impl Plugin for PowerupPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<PowerUp>();
+        app.register_type::<Option<PowerUp>>();
+
+        app.register_type::<Option<Debuff>>();
         app.register_type::<Debuff>();
         app.register_type::<Collectible>();
         app.replicate::<Collectible>();
