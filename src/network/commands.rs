@@ -15,7 +15,7 @@ use std::time::SystemTime;
 
 pub trait NetworkCommandsExt {
     fn connect(&mut self, ip: IpAddr, bind: IpAddr, port: u16);
-    fn listen(&mut self, ip: IpAddr, bind: IpAddr, port: u16);
+    fn listen(&mut self, ip: IpAddr, bind: IpAddr, port: u16, server_name: String);
     fn disconnect(&mut self);
 }
 
@@ -24,8 +24,13 @@ impl<'w, 's> NetworkCommandsExt for Commands<'w, 's> {
         self.add(Connect { bind, ip, port });
     }
 
-    fn listen(&mut self, ip: IpAddr, bind: IpAddr, port: u16) {
-        self.add(Listen { bind, port, ip });
+    fn listen(&mut self, ip: IpAddr, bind: IpAddr, port: u16, server_name: String) {
+        self.add(Listen {
+            bind,
+            port,
+            ip,
+            server_name,
+        });
     }
 
     fn disconnect(&mut self) {
@@ -95,6 +100,7 @@ pub struct Listen {
     pub bind: IpAddr,
     pub ip: IpAddr,
     pub port: u16,
+    pub server_name: String,
 }
 
 impl Command for Listen {
@@ -144,7 +150,7 @@ impl Command for Listen {
         .write(world);
         world.resource_mut::<MatchmakingState>().lobby = Some(EphemeralMatchmakingLobby {
             ip: self.ip.to_string(),
-            name: "".to_string(),
+            name: self.server_name,
             player_capacity: MAX_CLIENTS as u8,
             slots_occupied: 1,
             auto_restart: true,

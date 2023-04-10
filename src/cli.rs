@@ -27,7 +27,7 @@ struct Cli {
     /// network adapters.
     ///
     /// By default it binds to 0.0.0.0 which tries to pick the adapter automatically.
-    #[arg(short, long, default_value_t = Ipv4Addr::new(0,0,0,0).into())]
+    #[arg(short, long, default_value_t = Ipv4Addr::new(0, 0, 0, 0).into())]
     bind: IpAddr,
     /// Start a server and listen for connections at this IP address.
     /// This should be your public IP address if you want your server to be public.
@@ -36,11 +36,20 @@ struct Cli {
     /// Connect to the server at this IP address
     #[arg(short, long)]
     connect: Option<IpAddr>,
+
+    /// When creating a listen server, this sets the name of the server.
+    #[arg(short, long)]
+    name: Option<String>,
 }
 
 fn cli_system(mut commands: Commands, settings: Res<Cli>) {
     if let Some(host_on_ip) = settings.listen {
-        commands.listen(host_on_ip, settings.bind, settings.port);
+        commands.listen(
+            host_on_ip,
+            settings.bind,
+            settings.port,
+            settings.name.clone().unwrap_or("My Game".to_string()),
+        );
     } else if let Some(join_ip) = settings.connect {
         commands.connect(join_ip, settings.bind, settings.port);
     }

@@ -165,7 +165,7 @@ pub fn update_lobby_browser(
             child_builder,
             font.clone(),
             vec![
-                (100.0, "Name".to_string()),
+                (250.0, "Name".to_string()),
                 (100.0, "Players".to_string()),
                 (100.0, "Password".to_string()),
                 (100.0, "".to_string()),
@@ -176,7 +176,7 @@ pub fn update_lobby_browser(
                 child_builder,
                 font.clone(),
                 vec![
-                    (100.0, lobby.name.to_string()),
+                    (250.0, lobby.name.to_string()),
                     (
                         100.0,
                         format!("{} / {}", lobby.slots_occupied, lobby.player_capacity),
