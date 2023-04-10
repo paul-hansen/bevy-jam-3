@@ -183,6 +183,10 @@ impl Players {
         }
         None
     }
+
+    pub fn reset(&mut self) {
+        *self = Self::default();
+    }
 }
 
 #[derive(Bundle, Default)]

@@ -2,7 +2,7 @@ use crate::game_manager::GameState;
 use crate::network::matchmaking::{EphemeralMatchmakingLobby, MatchmakingState};
 use crate::network::{NetworkOwner, DEFAULT_PORT, MAX_CLIENTS, MAX_MESSAGE_SIZE, PROTOCOL_ID};
 use crate::player::commands::SpawnPlayer;
-use crate::player::PlayerColor;
+use crate::player::{PlayerColor, Players};
 use bevy::ecs::system::{Command, SystemState};
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
@@ -173,6 +173,7 @@ impl Command for Disconnect {
                 .resource_mut::<NextState<GameState>>()
                 .set(GameState::MainMenu);
         }
+        world.resource_mut::<Players>().reset();
         world.remove_resource::<RenetServer>();
         world.remove_resource::<RenetClient>();
     }
