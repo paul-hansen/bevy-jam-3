@@ -60,7 +60,7 @@ pub fn spawn_bundle_on_laser_added(
             return;
         };
 
-        audio.play(asset_server.load("laserShoot.mp3"));
+        audio.play(asset_server.load("laserShoot.mp3")).with_playback_rate(thread_rng().gen_range(0.75 .. 1.125));
 
         entcmds.insert(LaserBundle::default());
     }
@@ -162,7 +162,7 @@ impl Weapon {
                     let mut rot;
 
                     for _ in 0.. count {
-                        rot = rng.gen_range(-TAU/6.0 .. TAU/6.0);
+                        rot = rng.gen_range(-TAU/3.0 .. TAU/3.0);
                         t.rotate_z(rot);
 
                         commands.spawn((
