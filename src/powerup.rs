@@ -10,7 +10,10 @@ use crate::{
     },
     game_manager::GameState,
     network::is_server,
-    player::{Player, weapons::{Weapon, WeaponType}},
+    player::{
+        weapons::{Weapon, WeaponType},
+        Player,
+    },
 };
 
 #[derive(Component, Reflect, Copy, Default, FromReflect, Debug, Clone)]

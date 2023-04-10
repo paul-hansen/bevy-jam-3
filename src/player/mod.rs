@@ -347,7 +347,15 @@ fn insert_player_bundle(
 }
 
 pub fn player_actions(
-    mut query: Query<(&Player, &Transform, &ActionState<PlayerAction>, &mut Velocity), With<Player>>,
+    mut query: Query<
+        (
+            &Player,
+            &Transform,
+            &ActionState<PlayerAction>,
+            &mut Velocity,
+        ),
+        With<Player>,
+    >,
     time: Res<Time>,
 ) {
     for (player, transform, action_state, mut velocity) in query.iter_mut() {

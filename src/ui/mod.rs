@@ -1,6 +1,7 @@
 mod confirm_quit;
 mod create_game;
 mod focus;
+mod health_bar;
 mod join_by_ip;
 mod lobby_browser;
 mod main_menu;
@@ -12,6 +13,7 @@ use crate::network::matchmaking::{MatchmakingState, ServerList};
 use crate::ui::confirm_quit::{confirm_quit_to_menu_update, setup_confirm_quit};
 use crate::ui::create_game::draw_create_game;
 use crate::ui::focus::ui_focus_system;
+use crate::ui::health_bar::{setup_health_bar, update_health_bar};
 use crate::ui::join_by_ip::draw_join_by_ip;
 use crate::ui::lobby_browser::{handle_join_game_click, setup_lobby_browser, update_lobby_browser};
 use crate::ui::main_menu::setup_main_menu;
@@ -103,6 +105,8 @@ impl Plugin for UiPlugin {
         app.add_startup_systems((setup_ui_camera, resize_ui));
         app.add_system(resize_ui.run_if(on_event::<WindowResized>()));
         app.add_system(button_hover);
+        app.add_system(update_health_bar);
+        app.add_system(setup_health_bar.in_schedule(OnEnter(GameState::Playing)));
     }
 }
 
