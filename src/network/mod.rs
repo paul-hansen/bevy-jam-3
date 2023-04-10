@@ -103,7 +103,7 @@ impl Plugin for NetworkPlugin {
         app.replicate::<Velocity>();
         app.add_system(log_network_events);
         app.add_system(
-            advance_to_playing_on_connect
+            advance_to_playing_on_connected_and_replication
                 .run_if(is_client())
                 .in_set(OnUpdate(GameState::PreGame)),
         );
@@ -181,11 +181,12 @@ fn log_network_events(mut events: EventReader<ServerEvent>) {
     }
 }
 
-fn advance_to_playing_on_connect(
+fn advance_to_playing_on_connected_and_replication(
     client: Res<RenetClient>,
     mut next_game_state: ResMut<NextState<GameState>>,
+    query: Query<With<Replication>>,
 ) {
-    if client.is_connected() {
+    if client.is_connected() && query.iter().count() > 0 {
         next_game_state.set(GameState::Playing);
     }
 }

@@ -1,7 +1,7 @@
 use crate::network::commands::Disconnect;
 use crate::ui::{CommandOnClick, Menu, MenuUiContainer};
 use bevy::prelude::*;
-use bevy_replicon::prelude::RenetServer;
+use bevy_replicon::prelude::{RenetClient, RenetServer};
 
 #[derive(Component, Default, Reflect)]
 #[reflect(Component, Default)]
@@ -37,7 +37,7 @@ pub fn setup_pre_game(
                         "Waiting for Connection",
                         TextStyle {
                             font: font.clone(),
-                            font_size: 48.0,
+                            font_size: 32.0,
                             color: Color::YELLOW,
                         },
                     ),
@@ -79,10 +79,17 @@ pub fn setup_pre_game(
 pub fn update_pre_game_text(
     mut query: Query<&mut Text, With<PreGameText>>,
     server: Option<Res<RenetServer>>,
+    client: Option<Res<RenetClient>>,
 ) {
     for mut text in query.iter_mut() {
         text.sections[0].value = if server.is_some() {
             "Waiting for Players".to_string()
+        } else if client
+            .as_ref()
+            .map(|c| c.is_connected())
+            .unwrap_or_default()
+        {
+            "Connected. Waiting for game state.".to_string()
         } else {
             "Connecting to Server".to_string()
         }
