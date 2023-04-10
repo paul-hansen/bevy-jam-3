@@ -355,9 +355,10 @@ pub fn player_actions(
             let forward = transform.up();
 
             //TODO: There's only one debuff, obviously this needs to be moved to a match at some point
-            if player.debuff.is_none() {
-                velocity.linvel += forward.xy() * time.delta_seconds() * 50.0;
-
+            match player.debuff {
+                Some(Debuff::Slowed) => {},
+                None => { velocity.linvel += forward.xy() * time.delta_seconds() * 50.0 },
+                _ => { velocity.linvel += forward.xy() * time.delta_seconds() * 50.0 },
             }
         }
         if action_state.pressed(PlayerAction::TurnRight) {

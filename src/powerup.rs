@@ -5,7 +5,7 @@ use bevy_replicon::replication_core::{AppReplicationExt, Replication};
 
 use crate::{
     bundles::{
-        lyon_rendering::{get_path_from_verts, powerups::RAPIDFIRE_PATH, LyonRenderBundle},
+        lyon_rendering::{get_path_from_verts, powerups::{RAPIDFIRE_PATH, SCATTERGUN_PATH}, LyonRenderBundle},
         PhysicsBundle,
     },
     game_manager::GameState,
@@ -17,7 +17,7 @@ use crate::{
 #[reflect(Component, Default)]
 pub enum PowerUp {
     HitherThither,
-    TripleShot,
+    Scattergun,
     #[default]
     RapidFire,
     Shield,
@@ -76,15 +76,20 @@ pub fn spawn_powerup(
 
 pub fn spawn_client_powerup(
     mut cmds: Commands,
-    added: Query<(Entity, &Transform), Added<Collectible>>,
+    added: Query<(Entity, &Transform, &PowerUp), Added<Collectible>>,
 ) {
-    added.iter().for_each(|(ent, transform)| {
+    added.iter().for_each(|(ent, transform, powerup)| {
         info!("Spawning Client Powerup");
+        let path = match powerup{
+            PowerUp::RapidFire => RAPIDFIRE_PATH.to_vec(),
+            PowerUp::Scattergun => SCATTERGUN_PATH.to_vec(),
+            _ => RAPIDFIRE_PATH.to_vec()
+        };
         cmds.entity(ent)
             .insert(PowerUpClientBundle {
                 shape_bundle: LyonRenderBundle {
                     shape_render: ShapeBundle {
-                        path: get_path_from_verts(RAPIDFIRE_PATH.as_ref(), Vec2::splat(32.)),
+                        path: get_path_from_verts(path.as_ref(), Vec2::splat(16.)),
                         transform: *transform,
                         ..Default::default()
                     },
@@ -115,10 +120,23 @@ pub fn collect_powerups(
                     if let Ok((_entity, mut player, mut weapon)) = players.get_mut(e) {
                         player.powerup = Some(*powerup);
                         player.debuff = Some(*debuff);
-                        *weapon = Weapon{
-                            weapon_type: WeaponType::Laser { fire_rate: 10.0 },
-                            ..Default::default()
-                        };
+
+                        match powerup{
+                            PowerUp::Scattergun => {
+                                *weapon = Weapon{
+                                    weapon_type: WeaponType::Scattergun { fire_rate: 1.5, count: 7 },
+                                    ..default()
+                                }
+                            },
+                            PowerUp::RapidFire => {
+                                *weapon = Weapon{
+                                    weapon_type: WeaponType::Laser { fire_rate: 10.0 },
+                                    ..Default::default()
+                                };
+                            },
+                            _ => {}
+                        }
+
                         cmds.entity(powerup_ent).despawn_recursive();
                         return false;
                     }

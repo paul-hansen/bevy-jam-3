@@ -14,7 +14,9 @@ use bevy_rapier2d::prelude::{ExternalImpulse, QueryFilter};
 use bevy_replicon::prelude::{AppReplicationExt, Replication};
 use bevy_replicon::server::ServerSet;
 use leafwing_input_manager::action_state::ActionState;
+use rand::{thread_rng, Rng};
 use std::cmp::Ordering;
+use std::f32::consts::TAU;
 
 pub struct WeaponsPlugin;
 
@@ -104,6 +106,10 @@ pub enum WeaponType {
         /// How often this can fire per second
         fire_rate: f32,
     },
+    Scattergun {
+        fire_rate: f32,
+        count: u8,
+    }
 }
 
 impl Default for WeaponType {
@@ -133,7 +139,7 @@ impl Weapon {
                 let time_since_last_fire = time.elapsed_seconds_wrapped() - self.last_fire;
 
                 if time_since_last_fire > seconds_between_fire {
-                    debug!("Shoot Laser");
+                    info!("Shoot Laser");
                     commands.spawn((
                         Name::new("Laser"),
                         Replication,
@@ -142,6 +148,35 @@ impl Weapon {
                         SpatialBundle::from_transform(transform),
                         SpawnTime(time.elapsed_seconds_wrapped()),
                     ));
+                    self.last_fire = time.elapsed_seconds_wrapped();
+                }
+            },
+            WeaponType::Scattergun { fire_rate, count } => {
+                let seconds_between_fire = 1.0 / fire_rate;
+                let time_since_last_fire = time.elapsed_seconds_wrapped() - self.last_fire;
+
+                if time_since_last_fire > seconds_between_fire {
+                    info!("Shooting Scattergun");
+                    let mut rng = thread_rng();
+                    let mut t = transform;
+                    let mut rot;
+
+                    for _ in 0.. count {
+                        rot = rng.gen_range(-TAU/4.0 .. TAU/4.0);
+                        t.rotate_z(rot);
+
+                        commands.spawn((
+                            Name::new("Laser"),
+                            Replication,
+                            Laser,
+                            *owner,
+                            SpatialBundle::from_transform(t),
+                            SpawnTime(time.elapsed_seconds_wrapped()),
+                        ));
+
+                        t.rotate_z(-rot);
+                    }
+
                     self.last_fire = time.elapsed_seconds_wrapped();
                 }
             }
