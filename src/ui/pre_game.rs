@@ -1,13 +1,16 @@
 use crate::network::commands::Disconnect;
 use crate::ui::{CommandOnClick, Menu, MenuUiContainer};
 use bevy::prelude::*;
-use bevy_replicon::prelude::RenetClient;
+use bevy_replicon::prelude::RenetServer;
+
+#[derive(Component, Default, Reflect)]
+#[reflect(Component, Default)]
+pub struct PreGameText;
 
 pub fn setup_pre_game(
     mut commands: Commands,
     menu_ui: Query<Entity, With<MenuUiContainer>>,
     asset_server: Res<AssetServer>,
-    client: Option<Res<RenetClient>>,
 ) {
     let menu_container = menu_ui.single();
     let font = asset_server.load("hyperspace_font/Hyperspace Bold.otf");
@@ -27,25 +30,24 @@ pub fn setup_pre_game(
             },
         ))
         .with_children(|cb| {
-            cb.spawn(TextBundle {
-                text: Text::from_section(
-                    if client.is_none() {
-                        "Waiting for Players"
-                    } else {
-                        "Connecting to server"
+            cb.spawn((
+                PreGameText,
+                TextBundle {
+                    text: Text::from_section(
+                        "Waiting for Connection",
+                        TextStyle {
+                            font: font.clone(),
+                            font_size: 48.0,
+                            color: Color::YELLOW,
+                        },
+                    ),
+                    style: Style {
+                        margin: UiRect::bottom(Val::Px(24.0)),
+                        ..default()
                     },
-                    TextStyle {
-                        font: font.clone(),
-                        font_size: 48.0,
-                        color: Color::YELLOW,
-                    },
-                ),
-                style: Style {
-                    margin: UiRect::bottom(Val::Px(24.0)),
                     ..default()
                 },
-                ..default()
-            });
+            ));
 
             cb.spawn((
                 ButtonBundle {
@@ -72,4 +74,17 @@ pub fn setup_pre_game(
         })
         .id();
     commands.entity(menu_container).add_child(entity);
+}
+
+pub fn update_pre_game_text(
+    mut query: Query<&mut Text, With<PreGameText>>,
+    server: Option<Res<RenetServer>>,
+) {
+    for mut text in query.iter_mut() {
+        text.sections[0].value = if server.is_some() {
+            "Waiting for Players".to_string()
+        } else {
+            "Connecting to Server".to_string()
+        }
+    }
 }

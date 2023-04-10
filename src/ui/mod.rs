@@ -9,14 +9,13 @@ mod pre_game;
 use crate::game_manager::{GameState, Persist};
 use crate::network::commands::Disconnect;
 use crate::network::matchmaking::{MatchmakingState, ServerList};
-use crate::network::{is_client, is_server};
 use crate::ui::confirm_quit::{confirm_quit_to_menu_update, setup_confirm_quit};
 use crate::ui::create_game::draw_create_game;
 use crate::ui::focus::ui_focus_system;
 use crate::ui::join_by_ip::draw_join_by_ip;
 use crate::ui::lobby_browser::{handle_join_game_click, setup_lobby_browser, update_lobby_browser};
 use crate::ui::main_menu::setup_main_menu;
-use crate::ui::pre_game::setup_pre_game;
+use crate::ui::pre_game::{setup_pre_game, update_pre_game_text};
 use crate::MainCamera;
 use bevy::core_pipeline::clear_color::ClearColorConfig;
 use bevy::core_pipeline::core_2d;
@@ -66,20 +65,10 @@ impl Plugin for UiPlugin {
         );
         app.add_system(open_main_menu.in_schedule(OnEnter(GameState::MainMenu)));
 
-        // Show the pregame ui for servers
-        app.add_system(
-            open_pregame
-                .run_if(is_server())
-                .in_schedule(OnEnter(GameState::PreGame)),
-        );
-        // Clients pregame step doesn't currently progress, hide the menus for now
-        app.add_system(
-            hide_menu
-                .run_if(is_client())
-                .in_schedule(OnExit(GameState::MainMenu)),
-        );
+        app.add_system(open_pregame.in_schedule(OnEnter(GameState::PreGame)));
 
         app.add_system(hide_menu.in_schedule(OnExit(GameState::PreGame)));
+        app.add_system(update_pre_game_text.in_set(OnUpdate(GameState::PreGame)));
 
         app.add_system(update_menu_display);
         app.add_systems((
