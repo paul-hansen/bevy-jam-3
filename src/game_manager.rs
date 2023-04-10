@@ -1,18 +1,14 @@
 use std::f32::consts::PI;
 
 use bevy::prelude::*;
-use bevy_egui::EguiContexts;
 use bevy_replicon::prelude::{SendMode, ServerEventAppExt, ToClients};
 use bevy_replicon::renet::RenetServer;
 use bevy_replicon::replication_core::Replication;
 use bevy_replicon::server::SERVER_ID;
-use egui::Align2;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
-use crate::forms::{ConnectForm, ListenForm};
-
-use crate::network::{is_server, NetworkInfo, NetworkOwner};
+use crate::network::{is_server, NetworkOwner};
 use crate::player::commands::PlayerCommands;
 use crate::player::{Player, PlayerColor, PlayerColors};
 use crate::{
@@ -43,12 +39,10 @@ pub struct GameManager;
 
 impl Plugin for GameManager {
     fn build(&self, app: &mut App) {
-        app.add_state::<GameState>();
         app.add_server_event::<GameEvent>();
         app.register_type::<RestartCountdown>();
         app.register_type::<PostGameUiRoot>();
         app.add_systems((load_state,).in_schedule(OnEnter(GameState::Loading)));
-        app.add_systems((draw_main_menu,).in_set(OnUpdate(GameState::MainMenu)));
         app.add_system(
             end_game_last_man_standing
                 .run_if(is_server())
@@ -59,6 +53,7 @@ impl Plugin for GameManager {
         app.add_systems(
             (build_level.run_if(is_server()),).in_schedule(OnEnter(GameState::Playing)),
         );
+        app.add_system(despawn_everything.in_schedule(OnEnter(GameState::MainMenu)));
         app.add_systems(
             (
                 despawn_everything.run_if(is_server()),
@@ -92,43 +87,6 @@ impl RestartCountdown {
 pub fn load_state(mut next_state: ResMut<NextState<GameState>>) {
     info!("Auto-Advancing To Main Menu State");
     next_state.set(GameState::MainMenu);
-}
-
-pub fn draw_main_menu(
-    mut commands: Commands,
-    mut contexts: EguiContexts,
-    mut connect_form: Local<ConnectForm>,
-    mut listen_form: Local<ListenForm>,
-    network_info: Res<NetworkInfo>,
-) {
-    if network_info.is_changed() {
-        if let Some(ip) = network_info.public_ip {
-            listen_form.ip = ip.to_string();
-        }
-    }
-    egui::Window::new("Main Menu")
-        .auto_sized()
-        .collapsible(false)
-        .anchor(Align2::CENTER_CENTER, (0.0, 0.0))
-        .show(contexts.ctx_mut(), |ui| {
-            ui.heading("Join Game");
-            connect_form.draw(ui);
-            if ui.button("Join").clicked() {
-                if let Ok(connect) = connect_form.validate() {
-                    commands.add(connect);
-                }
-            }
-            ui.add_space(14.0);
-            ui.push_id("host", |ui| {
-                ui.heading("Host Game");
-                listen_form.draw(ui);
-                if ui.button("Host").clicked() {
-                    if let Ok(listen) = listen_form.validate() {
-                        commands.add(listen);
-                    }
-                }
-            });
-        });
 }
 
 ///Should only be run by the server, and then fill backfill on the clients

@@ -1,14 +1,31 @@
 use crate::game_manager::GameState;
+use crate::player::Player;
+use crate::ui::Menu;
 use bevy::{prelude::*, utils::HashMap};
 use bevy_mod_reqwest::{ReqwestBytesResult, ReqwestClient, ReqwestRequest};
+use bevy_replicon::server::ServerSet;
 use serde::{Deserialize, Serialize};
 
-#[derive(Resource, Default, Reflect)]
+#[derive(Resource, Reflect)]
 #[reflect(Resource)]
 pub struct MatchmakingState {
     pub lobby: Option<EphemeralMatchmakingLobby>,
-    pub server_list: HashMap<String, EphemeralMatchmakingLobby>,
     pub timer: Timer,
+}
+
+impl Default for MatchmakingState {
+    fn default() -> Self {
+        Self {
+            lobby: None,
+            timer: Timer::from_seconds(3.0, TimerMode::Repeating),
+        }
+    }
+}
+
+#[derive(Resource, Default, Reflect)]
+#[reflect(Resource)]
+pub struct ServerList {
+    pub servers: HashMap<String, EphemeralMatchmakingLobby>,
 }
 
 #[derive(Component)]
@@ -39,7 +56,7 @@ pub fn update_matchmaking_state(
     mut cmds: Commands,
     time: Res<Time>,
     client: ResMut<ReqwestClient>,
-    game_state: Res<State<GameState>>,
+    menu_state: Res<State<Menu>>,
 ) {
     mm_res.timer.tick(time.delta());
 
@@ -67,7 +84,7 @@ pub fn update_matchmaking_state(
             };
         }
 
-        if game_state.0 == GameState::MainMenu {
+        if menu_state.0 == Menu::LobbyBrowser {
             if let Ok(getreq) = client.0.get(url).build() {
                 cmds.spawn(ReqwestRequest(Some(getreq))).insert(GetLobbyReq);
             } else {
@@ -81,13 +98,13 @@ pub fn consume_matchmaking_responses(
     get_responses: Query<(&ReqwestBytesResult, Entity), With<GetLobbyReq>>,
     post_responses: Query<(&ReqwestBytesResult, Entity), With<PostLobbyReq>>,
     mut cmds: Commands,
-    mut mm_res: ResMut<MatchmakingState>,
+    mut server_list: ResMut<ServerList>,
 ) {
     get_responses.iter().for_each(|(response, ent)| {
         if let Some(response) = response.as_str() {
             match serde_json::from_str::<HashMap<String, EphemeralMatchmakingLobby>>(response) {
                 Ok(res) => {
-                    mm_res.server_list = res;
+                    server_list.servers = res;
                 }
                 Err(e) => {
                     warn!(
@@ -121,9 +138,23 @@ pub fn consume_matchmaking_responses(
     });
 }
 
-pub fn initialize_matchmaking_poller(mut mm_res: ResMut<MatchmakingState>) {
-    info!("Initializing Matchmaking Poller");
-    mm_res.timer = Timer::from_seconds(3.0, TimerMode::Repeating);
+fn remove_lobby_info(mut matchmaking_state: ResMut<MatchmakingState>) {
+    matchmaking_state.lobby = None;
+}
+
+fn update_lobby_info(mut matchmaking_state: ResMut<MatchmakingState>, query: Query<With<Player>>) {
+    let player_count = query.iter().count();
+    if player_count
+        != matchmaking_state
+            .lobby
+            .as_ref()
+            .map(|x| x.player_capacity as usize)
+            .unwrap_or_default()
+    {
+        if let Some(lobby) = matchmaking_state.lobby.as_mut() {
+            lobby.slots_occupied = player_count as u8;
+        }
+    }
 }
 
 pub struct MatchmakingPlugin;
@@ -131,10 +162,15 @@ pub struct MatchmakingPlugin;
 impl Plugin for MatchmakingPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<MatchmakingState>();
+        app.register_type::<ServerList>();
         app.register_type::<HashMap<String, EphemeralMatchmakingLobby>>();
         app.init_resource::<MatchmakingState>();
-        app.add_startup_systems((initialize_matchmaking_poller,));
+        app.init_resource::<ServerList>();
         app.add_system(update_matchmaking_state);
         app.add_system(consume_matchmaking_responses);
+
+        // Remove lobby info so it doesn't keep notifying the master server.
+        app.add_system(remove_lobby_info.in_schedule(OnEnter(GameState::MainMenu)));
+        app.add_system(update_lobby_info.in_set(ServerSet::Authority));
     }
 }

@@ -1,12 +1,12 @@
 use crate::bundles::lyon_rendering::projectile_paths::LASER_PATH;
 use crate::bundles::lyon_rendering::{get_path_from_verts, LyonRenderBundle};
 use crate::game_manager::GameState;
-use crate::network::util::spawn_bundle_default_on_added;
 use crate::network::{is_server, NetworkOwner};
 use crate::player::PlayerAction;
 use bevy::math::Vec3Swizzles;
 use bevy::prelude::*;
 use bevy::sprite::Mesh2dHandle;
+use bevy_kira_audio::AudioControl;
 use bevy_prototype_lyon::prelude::*;
 use bevy_prototype_lyon::render::ShapeMaterial;
 use bevy_rapier2d::plugin::RapierContext;
@@ -42,9 +42,25 @@ impl Plugin for WeaponsPlugin {
                 .run_if(is_server())
                 .in_base_set(CoreSet::PostUpdate),
         );
-        app.add_system(
-            spawn_bundle_default_on_added::<Laser, LaserBundle>.in_base_set(CoreSet::PreUpdate),
-        );
+        app.add_system(spawn_bundle_on_laser_added.in_base_set(CoreSet::PreUpdate));
+    }
+}
+
+pub fn spawn_bundle_on_laser_added(
+    mut commands: Commands,
+    query: Query<Entity, Added<Laser>>,
+    audio: Res<bevy_kira_audio::Audio>,
+    asset_server: ResMut<AssetServer>,
+) {
+    for entity in query.iter() {
+        let Some(mut entcmds) = commands.get_entity(entity) else {
+            warn!("Could not find entity to insert bundle into");
+            return;
+        };
+
+        audio.play(asset_server.load("laserShoot.mp3"));
+
+        entcmds.insert(LaserBundle::default());
     }
 }
 
@@ -171,15 +187,7 @@ fn detect_laser_hits(
             true,
             QueryFilter::default().exclude_sensors(),
         ) {
-            // This is similar to `QueryPipeline::cast_ray` illustrated above except
-            // that it also returns the normal of the collider shape at the hit point.
-            let hit_point = intersection.point;
-            let hit_normal = intersection.normal;
             if network_owners.get(hit_entity) != Ok(owner) {
-                println!(
-                    "Entity {:?} hit at point {} with normal {}",
-                    hit_entity, hit_point, hit_normal
-                );
                 damaged_events.send(DamagedEvent {
                     entity: hit_entity,
                     amount: Laser::DAMAGE,

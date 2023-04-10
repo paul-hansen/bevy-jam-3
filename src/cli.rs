@@ -10,7 +10,7 @@ pub struct CliPlugin;
 impl Plugin for CliPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(Cli::parse());
-        app.add_systems((cli_system,).in_schedule(OnEnter(GameState::MainMenu)));
+        app.add_systems((cli_system.run_if(run_once()),).in_schedule(OnEnter(GameState::MainMenu)));
     }
 }
 

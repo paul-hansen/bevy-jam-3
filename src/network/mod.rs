@@ -2,13 +2,13 @@ pub mod commands;
 #[cfg(feature = "bevy_editor_pls")]
 mod editor;
 pub mod matchmaking;
-pub mod util;
 
 use std::fmt::Debug;
 use std::net::{IpAddr, Ipv4Addr};
 
 use crate::asteroid::Asteroid;
 use crate::bundles::lyon_rendering::roid_paths::RoidPath;
+use crate::game_manager::GameState;
 use crate::player::{Player, PlayerAction};
 use bevy::prelude::*;
 use bevy::tasks::{AsyncComputeTaskPool, Task};
@@ -102,6 +102,11 @@ impl Plugin for NetworkPlugin {
         app.replicate::<Asteroid>();
         app.replicate::<Velocity>();
         app.add_system(log_network_events);
+        app.add_system(
+            advance_to_playing_on_connect
+                .run_if(is_client())
+                .in_set(OnUpdate(GameState::PreGame)),
+        );
         app.add_client_event::<ActionDiff<PlayerAction, NetworkOwner>>();
         app.add_system(
             generate_action_diffs::<PlayerAction, NetworkOwner>.in_base_set(CoreSet::PostUpdate),
@@ -118,6 +123,10 @@ impl Plugin for NetworkPlugin {
 
 pub fn is_server() -> impl FnMut(Option<Res<RenetServer>>) -> bool + Clone {
     resource_exists::<RenetServer>()
+}
+
+pub fn is_client() -> impl FnMut(Option<Res<RenetClient>>) -> bool + Clone {
+    move |res: Option<Res<RenetClient>>| res.is_some()
 }
 
 /// This is the same as [`leafwing_input_manager::systems::process_action_diffs`] but
@@ -169,5 +178,14 @@ impl Default for NetworkOwner {
 fn log_network_events(mut events: EventReader<ServerEvent>) {
     for event in events.iter() {
         info!("{event:?}");
+    }
+}
+
+fn advance_to_playing_on_connect(
+    client: Res<RenetClient>,
+    mut next_game_state: ResMut<NextState<GameState>>,
+) {
+    if client.is_connected() {
+        next_game_state.set(GameState::Playing);
     }
 }
