@@ -76,7 +76,7 @@ pub fn update_matchmaking_state(
                 .header("Content-Type", "Application/JSON")
                 .build()
             {
-                info!("Sending req: {}", json);
+                debug!("Sending req: {}", json);
                 let req = ReqwestRequest(Some(postreq));
                 cmds.spawn(req).insert(PostLobbyReq);
             } else {
@@ -124,10 +124,10 @@ pub fn consume_matchmaking_responses(
         if let Some(response) = response.as_str() {
             match response {
                 "SUCCESS" => {
-                    info!("Successfully Posted MM Lobby")
+                    debug!("Successfully Posted MM Lobby")
                 }
                 anything_else => {
-                    info!("NON SUCCESS: {}", anything_else)
+                    warn!("NON SUCCESS: {}", anything_else)
                 }
             }
         } else {

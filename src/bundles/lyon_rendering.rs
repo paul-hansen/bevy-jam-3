@@ -153,3 +153,13 @@ pub mod roid_paths {
         (-0.5, -0.1),
     ];
 }
+
+pub mod powerups {
+    pub const RAPIDFIRE_PATH: [(f32, f32); 5] = [
+        (-0.5, -0.5),
+        (-0.5, 0.5),
+        (0.5, -0.5),
+        (0.5, 0.5),
+        (-0.5, -0.5),
+    ];
+}

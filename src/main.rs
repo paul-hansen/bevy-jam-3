@@ -24,6 +24,7 @@ use bevy_prototype_lyon::prelude::ShapePlugin;
 use bevy_rapier2d::prelude::{DebugRenderContext, NoUserData, RapierPhysicsPlugin};
 use bevy_rapier2d::render::RapierDebugRenderPlugin;
 use game_manager::GameManager;
+use powerup::PowerupPlugin;
 
 mod arena;
 mod asteroid;
@@ -63,6 +64,7 @@ fn main() {
         .add_plugin(bevy_kira_audio::AudioPlugin)
         .add_plugin(SqueezeAudioPlugin)
         .add_plugin(ui::UiPlugin)
+        .add_plugin(PowerupPlugin)
         .insert_resource(Msaa::Sample8);
 
     app.register_type::<MainCamera>();

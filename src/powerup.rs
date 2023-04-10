@@ -1,81 +1,128 @@
 use bevy::prelude::*;
+use bevy_prototype_lyon::prelude::ShapeBundle;
 use bevy_rapier2d::prelude::{Collider, QueryFilter, RapierContext, Sensor};
-use bevy_replicon::{server::ServerSet, replication_core::AppReplicationExt};
+use bevy_replicon::replication_core::{AppReplicationExt, Replication};
 
 use crate::{
-    bundles::{lyon_rendering::LyonRenderBundle, PhysicsBundle},
+    bundles::{
+        lyon_rendering::{get_path_from_verts, powerups::RAPIDFIRE_PATH, LyonRenderBundle},
+        PhysicsBundle,
+    },
+    game_manager::GameState,
+    network::is_server,
     player::Player,
 };
 
-#[derive(Component, Reflect, Debug, Clone)]
+#[derive(Component, Reflect, Default, Debug, Clone)]
+#[reflect(Component, Default)]
 pub enum PowerUp {
     HitherThither,
     TripleShot,
-    RapidFire(u32),
-    Shield(u32),
+    #[default]
+    RapidFire,
+    Shield,
 }
 
-#[derive(Component, Reflect, Debug, Clone)]
+#[derive(Component, Default, Reflect, Debug, Clone)]
+#[reflect(Component, Default)]
 pub enum Debuff {
+    #[default]
     Slowed,
     Inaccuracy,
     HealthBurn,
     ReversedControls,
 }
 
-#[derive(Component, Reflect)]
+#[derive(Component, Default, Reflect)]
+#[reflect(Component, Default)]
+
 pub struct Collectible;
 
-#[derive(Bundle)]
+#[derive(Bundle, Default)]
 pub struct PowerUpServerBundle {
     pub spatial: SpatialBundle,
     pub powerup: PowerUp,
     pub debuff: Debuff,
-    
+    pub collectible: Collectible,
+    pub replication: Replication,
 }
 
-#[derive(Bundle)]
+#[derive(Bundle, Default)]
 pub struct PowerUpClientBundle {
     pub sensor: Sensor,
     pub shape_bundle: LyonRenderBundle,
     pub physics: PhysicsBundle,
 }
 
-pub fn spawn_powerup(commands: &mut Commands, transform: Transform, powerup: PowerUp, debuff: Debuff) -> Entity{
-  commands.spawn(PowerUpServerBundle{
-    spatial: SpatialBundle { transform, ..Default::default() },
-    powerup,
-    debuff,
-  }).id()
+pub fn spawn_powerup(
+    commands: &mut Commands,
+    transform: Transform,
+    powerup: PowerUp,
+    debuff: Debuff,
+) -> Entity {
+    commands
+        .spawn(PowerUpServerBundle {
+            spatial: SpatialBundle {
+                transform,
+                ..Default::default()
+            },
+            powerup,
+            debuff,
+            ..default()
+        })
+        .insert(Name::new("Powerup"))
+        .id()
 }
 
-pub fn spawn_client_powerup(added: Query<(Entity, &PowerUp, &Transform, &Debuff), Added<Collectible>>){
-
+pub fn spawn_client_powerup(
+    mut cmds: Commands,
+    added: Query<(Entity, &Transform), Added<Collectible>>,
+) {
+    added.iter().for_each(|(ent, transform)| {
+        info!("Spawning Client Powerup");
+        cmds.entity(ent)
+            .insert(PowerUpClientBundle {
+                shape_bundle: LyonRenderBundle {
+                    shape_render: ShapeBundle {
+                        path: get_path_from_verts(RAPIDFIRE_PATH.as_ref(), Vec2::splat(32.)),
+                        transform: *transform,
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                },
+                ..Default::default()
+            })
+            .insert(Name::new("Powerup"));
+    });
 }
 
 pub fn collect_powerups(
     rapier_context: Res<RapierContext>,
     powerups: Query<(&PowerUp, &Debuff, &Collider, &Transform, Entity), Without<Player>>,
     players: Query<Entity, With<Player>>,
-    mut cmds: Commands
+    mut cmds: Commands,
 ) {
-    powerups.iter().for_each(|(powerup, debuff, collider, transform, p_ent)| {
-        let pos = Vec2::new(transform.translation.x, transform.translation.y);
-        rapier_context.intersections_with_shape(
-            pos,
-            transform.rotation.to_euler(EulerRot::XYZ).2,
-            collider,
-            QueryFilter::default(),
-            |e| {
-              if let Ok(entity) = players.get(e){
-                cmds.entity(entity).insert(powerup.clone()).insert(debuff.clone());
-                cmds.entity(p_ent).despawn_recursive();
-                return false;
-              }
-              true
-            },
-        );
-    });
+    powerups
+        .iter()
+        .for_each(|(powerup, debuff, collider, transform, powerup_ent)| {
+            let pos = Vec2::new(transform.translation.x, transform.translation.y);
+            rapier_context.intersections_with_shape(
+                pos,
+                transform.rotation.to_euler(EulerRot::XYZ).2,
+                collider,
+                QueryFilter::default(),
+                |e| {
+                    if let Ok(entity) = players.get(e) {
+                        cmds.entity(entity)
+                            .insert(powerup.clone())
+                            .insert(debuff.clone());
+                        cmds.entity(powerup_ent).despawn_recursive();
+                        return false;
+                    }
+                    true
+                },
+            );
+        });
 }
 
 pub struct PowerupPlugin;
@@ -89,6 +136,11 @@ impl Plugin for PowerupPlugin {
         app.replicate::<PowerUp>();
         app.replicate::<Debuff>();
 
-        app.add_system(collect_powerups.in_set(ServerSet::Authority));
+        app.add_system(spawn_client_powerup);
+        app.add_system(
+            collect_powerups
+                .run_if(is_server())
+                .in_set(OnUpdate(GameState::Playing)),
+        );
     }
 }

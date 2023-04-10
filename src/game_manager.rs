@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 use crate::network::{is_server, NetworkOwner};
 use crate::player::commands::PlayerCommands;
 use crate::player::{Player, PlayerColor, PlayerColors};
+use crate::powerup::{spawn_powerup, Debuff, PowerUp};
 use crate::{
     arena::{Arena, Force},
     asteroid::{asteroid_spawn, Asteroid},
@@ -102,7 +103,20 @@ pub fn build_level(mut cmds: Commands, time: Res<Time>) {
     .insert(Replication::default());
 
     let mut rng = rand::thread_rng();
-    for _ in 0..45 {
+
+    for _ in 0..rng.gen_range(1..3) {
+        let x = rng.gen_range(-850.0..850.0);
+        let y = rng.gen_range(-400.0..400.0);
+
+        spawn_powerup(
+            &mut cmds,
+            Transform::from_xyz(x, y, 0.2),
+            PowerUp::RapidFire,
+            Debuff::Slowed,
+        );
+    }
+
+    for _ in 0..rng.gen_range(30..45) {
         let roid_path = match (rng.gen_range(0..10) % 2) == 0 {
             true => RoidPath::One,
             false => RoidPath::Two,
