@@ -64,6 +64,12 @@ impl Plugin for GameManager {
                 .in_schedule(OnExit(GameState::PostGame)),
         );
 
+        app.add_system(
+            return_to_pregame_if_no_clients
+                .run_if(is_server())
+                .in_set(OnUpdate(GameState::PostGame)),
+        );
+
         app.add_systems((asteroid_spawn,));
     }
 }
@@ -292,5 +298,18 @@ fn reload_with_current_players(
         if let Some(color) = player_colors.color(client_id) {
             commands.spawn_player(color, NetworkOwner(client_id));
         }
+    }
+}
+
+fn return_to_pregame_if_no_clients(
+    server: Res<RenetServer>,
+    mut next_game_state: ResMut<NextState<GameState>>,
+    mut removed: RemovedComponents<RestartCountdown>,
+) {
+    let countdown_finished = removed.iter().count() > 0;
+
+    if countdown_finished && server.clients_id().is_empty() {
+        warn!("No clients connected, returning to pregame");
+        next_game_state.set(GameState::PreGame);
     }
 }
