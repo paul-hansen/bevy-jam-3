@@ -30,13 +30,14 @@ impl Plugin for PlayerPlugin {
         app.add_plugin(InputManagerPlugin::<PlayerAction>::default());
         app.add_plugin(WeaponsPlugin);
         app.register_type::<PlayerColor>();
-        app.register_type::<PlayerColors>();
-        app.insert_resource(PlayerColors::default());
+        app.register_type::<Players>();
+        app.insert_resource(Players::default());
         app.register_type::<Player>();
         app.add_systems(
             (player_actions, damage_players_outside_arena).in_set(OnUpdate(GameState::Playing)),
         );
         app.add_system(spawn_player_on_connected);
+        app.add_system(despawn_on_player_disconnect);
         app.add_systems((pregame_listen_for_player_connect,).in_set(OnUpdate(GameState::PreGame)));
         app.add_system(insert_player_bundle);
     }
@@ -90,14 +91,18 @@ impl std::fmt::Display for Player {
     }
 }
 
-#[derive(Default, Copy, Clone, Debug, Reflect, Serialize, Deserialize)]
+#[derive(
+    Default, Copy, Clone, Debug, Reflect, Serialize, Deserialize, FromReflect, Hash, Eq, PartialEq,
+)]
 #[reflect(Default)]
 pub enum PlayerColor {
     #[default]
     Red,
     Blue,
     Green,
-    Yellow,
+    Purple,
+    Cyan,
+    Orange,
 }
 
 impl std::fmt::Display for PlayerColor {
@@ -107,12 +112,15 @@ impl std::fmt::Display for PlayerColor {
 }
 
 impl PlayerColor {
+    pub const MAX: usize = 5;
     pub fn color(&self) -> Color {
         match self {
             PlayerColor::Red => Color::RED,
             PlayerColor::Blue => Color::BLUE,
             PlayerColor::Green => Color::GREEN,
-            PlayerColor::Yellow => Color::YELLOW,
+            PlayerColor::Purple => Color::PURPLE,
+            PlayerColor::Cyan => Color::CYAN,
+            PlayerColor::Orange => Color::ORANGE,
         }
     }
 
@@ -121,7 +129,9 @@ impl PlayerColor {
             0 => PlayerColor::Red,
             1 => PlayerColor::Blue,
             2 => PlayerColor::Green,
-            3 => PlayerColor::Yellow,
+            3 => PlayerColor::Purple,
+            4 => PlayerColor::Cyan,
+            5 => PlayerColor::Orange,
             _ => {
                 warn!("Should probably add more colors");
                 PlayerColor::Red
@@ -132,10 +142,51 @@ impl PlayerColor {
 
 #[derive(Resource, Reflect, Default)]
 #[reflect(Resource, Default)]
-pub struct PlayerColors {
-    /// Lookup a [`PlayerColor`] by client_id
-    #[reflect(ignore)]
-    pub colors_by_client_id: HashMap<u64, PlayerColor>,
+pub struct Players {
+    colors: HashMap<u64, PlayerColor>,
+    clients: HashMap<PlayerColor, u64>,
+}
+
+impl Players {
+    pub fn color(&self, client_id: u64) -> Option<PlayerColor> {
+        self.colors.get(&client_id).copied()
+    }
+
+    #[allow(dead_code)]
+    pub fn client(&self, color: PlayerColor) -> Option<u64> {
+        self.clients.get(&color).copied()
+    }
+
+    pub fn insert(&mut self, color: PlayerColor, client_id: u64) {
+        self.clients.insert(color, client_id);
+        self.colors.insert(client_id, color);
+    }
+
+    #[allow(dead_code)]
+    pub fn remove_color(&mut self, color: PlayerColor) {
+        if let Some(id) = self.clients.remove(&color) {
+            self.colors.remove(&id);
+        }
+    }
+    pub fn remove_client(&mut self, client_id: u64) {
+        if let Some(color) = self.colors.remove(&client_id) {
+            self.clients.remove(&color);
+        }
+    }
+
+    fn available_color(&self) -> Option<PlayerColor> {
+        for x in 0..=PlayerColor::MAX {
+            let color = PlayerColor::get(x);
+            if self.clients.get(&color).is_none() {
+                return Some(color);
+            }
+        }
+        None
+    }
+
+    pub fn reset(&mut self) {
+        *self = Self::default();
+    }
 }
 
 #[derive(Bundle, Default)]
@@ -183,14 +234,38 @@ impl PlayerBundle {
 fn spawn_player_on_connected(
     mut commands: Commands,
     mut events: EventReader<ServerEvent>,
-    player_query: Query<With<Player>>,
+    players: Res<Players>,
 ) {
     for event in events.iter() {
         if let ServerEvent::ClientConnected(client_id, _) = event {
-            let new_player_index = player_query.iter().count();
-            commands.spawn_player(PlayerColor::get(new_player_index), NetworkOwner(*client_id));
+            commands.spawn_player(
+                players.available_color().unwrap_or_default(),
+                NetworkOwner(*client_id),
+            );
 
             info!("Player connected while in play state. Spawning Player")
+        }
+    }
+}
+
+fn despawn_on_player_disconnect(
+    mut commands: Commands,
+    mut events: EventReader<ServerEvent>,
+    mut players: ResMut<Players>,
+    query: Query<(Entity, &Player)>,
+) {
+    for event in events.iter() {
+        if let ServerEvent::ClientDisconnected(client_id) = event {
+            if let Some(color) = players.color(*client_id) {
+                for (entity, player) in query.iter() {
+                    if player.color == color {
+                        commands.entity(entity).despawn_recursive();
+                    }
+                }
+
+                info!("Player {color} disconnected");
+            }
+            players.remove_client(*client_id);
         }
     }
 }
