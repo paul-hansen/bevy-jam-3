@@ -35,6 +35,7 @@ pub struct ListenForm {
     pub ip: String,
     pub port: u16,
     pub bind: String,
+    pub server_name: String,
     pub error: Option<String>,
 }
 
@@ -50,20 +51,27 @@ impl ListenForm {
                 e
             })?,
             port: self.port,
+            server_name: self.server_name.clone(),
         })
     }
 
     pub fn draw(&mut self, ui: &mut Ui) {
-        ui.label("IP Address");
+        ui.heading("Name");
+        if ui.text_edit_singleline(&mut self.server_name).changed() {
+            self.server_name = self.server_name.replace(|c: char| !c.is_ascii(), "");
+            self.server_name = self.server_name.chars().take(18).collect();
+            self.error = None;
+        }
+        ui.heading("IP Address");
         if ui.text_edit_singleline(&mut self.ip).changed() {
             self.error = None;
         }
         ui.collapsing("Advanced", |ui| {
-            ui.label("Bind IP Address");
+            ui.heading("Bind IP Address");
             if ui.text_edit_singleline(&mut self.bind).changed() {
                 self.error = None;
             }
-            ui.label("Port");
+            ui.heading("Port");
             if egui::DragValue::new(&mut self.port).ui(ui).changed() {
                 self.error = None;
             }
@@ -85,6 +93,7 @@ impl FromWorld for ListenForm {
                 .to_string(),
             port: DEFAULT_PORT,
             bind: Ipv4Addr::new(0, 0, 0, 0).to_string(),
+            server_name: "My Game".to_string(),
             error: None,
         }
     }
