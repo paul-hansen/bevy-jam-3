@@ -110,12 +110,12 @@ pub fn build_level(mut cmds: Commands, time: Res<Time>) {
 
     let mut rng = rand::thread_rng();
 
-    for _ in 0..rng.gen_range(1..3) {
+    for _ in 0..rng.gen_range(1..5) {
         let x = rng.gen_range(-850.0..850.0);
         let y = rng.gen_range(-400.0..400.0);
 
         //Current these aren't really explicitly checked, intent was to make them composable.
-        let powerup_type = match rng.gen_range(0..4) {
+        let powerup_type = match rng.gen_range(0 .. 2) {
             0 => (PowerUp::RapidFire, Debuff::Slowed),
             1 => (PowerUp::Scattergun, Debuff::Inaccuracy),
             _ => (PowerUp::Scattergun, Debuff::Inaccuracy), //TODO: Rethink this, currently it's hardcoded and this isn't really used to compose

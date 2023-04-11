@@ -364,6 +364,7 @@ fn insert_player_bundle(
         let thruster_entity = commands
             .spawn(ThrusterBundle::with_color(player.color))
             .id();
+
         let player_entity = commands
             .entity(entity)
             .insert(PhysicsBundle::default())
@@ -405,7 +406,9 @@ pub fn player_actions(
     mut thrusters: Query<(&Parent, &mut Thruster)>,
     time: Res<Time>,
 ) {
+
     for (player, transform, action_state, mut velocity, entity) in query.iter_mut() {
+
         if action_state.pressed(PlayerAction::Thrust) {
             let forward = transform.up();
 
@@ -426,6 +429,7 @@ pub fn player_actions(
         }else if let Some((_parent, mut thruster)) = thrusters.iter_mut().find(|(parent, _thruster)|{parent.get() == entity}){
             thruster.val = (thruster.val - time.delta_seconds()).min(1.0).max(0.0);
         }
+
         if action_state.pressed(PlayerAction::TurnRight) {
             velocity.angvel -= 7.0 * time.delta_seconds();
         }
