@@ -251,26 +251,30 @@ pub struct ThrusterBundle {
 
 impl ThrusterBundle {
     pub fn with_color(p_color: PlayerColor) -> Self {
-
         ThrusterBundle {
             lyon_render: LyonRenderBundle {
                 shape_render: ShapeBundle {
                     path: get_path_from_verts(&THRUSTER_JET, Vec2::splat(24.0)),
-                    transform: Transform::from_rotation(Quat::from_rotation_z(PI)).with_translation(Vec3::new(0.0, -24.0, 0.0)),
+                    transform: Transform::from_rotation(Quat::from_rotation_z(PI))
+                        .with_translation(Vec3::new(0.0, -24.0, 0.0)),
                     ..default()
                 },
                 stroke: Stroke::color(p_color.color()),
                 fill: Fill::color(p_color.color()),
             },
             thruster: Thruster { val: 0.0 },
-            replicate: Replication
+            replicate: Replication,
         }
     }
 }
 
-fn handle_thruster(mut thrusters: Query<(&mut Transform, &Thruster)>, time: Res<Time>){
+fn handle_thruster(mut thrusters: Query<(&mut Transform, &Thruster)>, time: Res<Time>) {
     for (mut transform, thruster) in thrusters.iter_mut() {
-        transform.scale.y = thruster.val * ((time.elapsed_seconds_wrapped() * 20.0).sin().abs().clamp(0.5, 1.0));
+        transform.scale.y = thruster.val
+            * ((time.elapsed_seconds_wrapped() * 20.0)
+                .sin()
+                .abs()
+                .clamp(0.5, 1.0));
     }
 }
 
@@ -415,18 +419,27 @@ pub fn player_actions(
             //TODO: There's only one debuff, obviously this needs to be moved to a match at some point
             match player.debuff {
                 Some(Debuff::Slowed) => {
-                    if let Some((_parent, mut thruster)) = thrusters.iter_mut().find(|(parent, _thruster)|{parent.get() == entity}){
+                    if let Some((_parent, mut thruster)) = thrusters
+                        .iter_mut()
+                        .find(|(parent, _thruster)| parent.get() == entity)
+                    {
                         thruster.val = (thruster.val - time.delta_seconds()).min(1.0).max(0.0);
                     }
                 }
                 _ => {
                     velocity.linvel += forward.xy() * time.delta_seconds() * 50.0;
-                    if let Some((_parent, mut thruster)) = thrusters.iter_mut().find(|(parent, _thruster)|{parent.get() == entity}){
+                    if let Some((_parent, mut thruster)) = thrusters
+                        .iter_mut()
+                        .find(|(parent, _thruster)| parent.get() == entity)
+                    {
                         thruster.val = (thruster.val + time.delta_seconds()).min(1.0).max(0.0);
                     }
-                },
+                }
             }
-        }else if let Some((_parent, mut thruster)) = thrusters.iter_mut().find(|(parent, _thruster)|{parent.get() == entity}){
+        } else if let Some((_parent, mut thruster)) = thrusters
+            .iter_mut()
+            .find(|(parent, _thruster)| parent.get() == entity)
+        {
             thruster.val = (thruster.val - time.delta_seconds()).min(1.0).max(0.0);
         }
 
