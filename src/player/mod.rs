@@ -65,22 +65,22 @@ impl PlayerAction {
         input_map.insert(KeyCode::Right, Self::TurnRight);
         input_map.insert(KeyCode::D, Self::TurnRight);
         input_map.insert(
-            SingleAxis::negative_only(GamepadAxisType::LeftStickX, 0.1),
+            SingleAxis::negative_only(GamepadAxisType::LeftStickX, -0.3),
             Self::TurnLeft,
         );
         input_map.insert(
-            SingleAxis::positive_only(GamepadAxisType::LeftStickX, 0.1),
+            SingleAxis::positive_only(GamepadAxisType::LeftStickX, 0.3),
             Self::TurnRight,
         );
-        input_map.insert(
-            SingleAxis::positive_only(GamepadAxisType::LeftStickY, 0.1),
-            Self::Thrust,
-        );
+        input_map.insert(GamepadButtonType::DPadRight, Self::TurnRight);
+        input_map.insert(GamepadButtonType::DPadLeft, Self::TurnLeft);
+        input_map.insert(GamepadButtonType::South, Self::Thrust);
+        input_map.insert(GamepadButtonType::DPadUp, Self::Thrust);
         input_map.insert(KeyCode::W, Self::Thrust);
         input_map.insert(KeyCode::Up, Self::Thrust);
         input_map.insert(KeyCode::Space, Self::Shoot);
-        input_map.insert(GamepadButtonType::South, Self::Shoot);
         input_map.insert(GamepadButtonType::RightTrigger2, Self::Shoot);
+        input_map.insert(GamepadButtonType::RightTrigger, Self::Shoot);
         input_map
     }
 }
@@ -438,10 +438,10 @@ pub fn player_actions(
         }
 
         if action_state.pressed(PlayerAction::TurnRight) {
-            velocity.angvel = -700.0 * time.delta_seconds();
+            velocity.angvel -= 7.0 * time.delta_seconds();
         } else if action_state.pressed(PlayerAction::TurnLeft) {
-            velocity.angvel = 700.0 * time.delta_seconds();
-        } else {
+            velocity.angvel += 7.0 * time.delta_seconds();
+        } else if velocity.angvel != 0.0 {
             velocity.angvel = 0.0;
         }
     }

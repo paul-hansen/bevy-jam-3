@@ -10,5 +10,14 @@ to `127.0.0.1`.
 
 ## Controls
 
-WASD keys to move
-Spacebar shoots
+### KeyBoard
+
+- WASD keys to move
+- Spacebar shoots
+
+### Gamepad
+
+- Left stick turns left/right
+- "South" face button thrusts ("A" for Xbox controllers)
+- Right trigger or bumper shoots
+- Dpad also works for turning and thrust
