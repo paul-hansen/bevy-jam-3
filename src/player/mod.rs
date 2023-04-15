@@ -410,9 +410,7 @@ pub fn player_actions(
     mut thrusters: Query<(&Parent, &mut Thruster)>,
     time: Res<Time>,
 ) {
-
     for (player, transform, action_state, mut velocity, entity) in query.iter_mut() {
-
         if action_state.pressed(PlayerAction::Thrust) {
             let forward = transform.up();
 
