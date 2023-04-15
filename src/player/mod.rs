@@ -442,11 +442,11 @@ pub fn player_actions(
         }
 
         if action_state.pressed(PlayerAction::TurnRight) {
-            velocity.angvel -= 7.0 * time.delta_seconds();
-        }
-
-        if action_state.pressed(PlayerAction::TurnLeft) {
-            velocity.angvel += 7.0 * time.delta_seconds();
+            velocity.angvel = -700.0 * time.delta_seconds();
+        } else if action_state.pressed(PlayerAction::TurnLeft) {
+            velocity.angvel = 700.0 * time.delta_seconds();
+        } else {
+            velocity.angvel = 0.0;
         }
     }
 }
