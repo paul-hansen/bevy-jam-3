@@ -1,6 +1,7 @@
 use std::f32::consts::PI;
 
 use bevy::prelude::*;
+use bevy::render::view::NoFrustumCulling;
 use bevy_replicon::prelude::{SendMode, ServerEventAppExt, ToClients};
 use bevy_replicon::renet::RenetServer;
 use bevy_replicon::replication_core::Replication;
@@ -284,6 +285,7 @@ type PersistentRootEntities = (
     Without<Persist>,
     Without<Window>,
     Without<bevy_editor_pls::default_windows::hierarchy::HideInEditor>,
+    Without<NoFrustumCulling>,
 );
 #[cfg(not(feature = "bevy_editor_pls"))]
 type PersistentRootEntities = (Without<Parent>, Without<Window>, Without<Persist>);
