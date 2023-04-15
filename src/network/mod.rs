@@ -3,6 +3,7 @@ pub mod commands;
 mod editor;
 pub mod matchmaking;
 
+use async_compat::Compat;
 use std::fmt::Debug;
 use std::net::{IpAddr, Ipv4Addr};
 
@@ -57,9 +58,9 @@ impl Default for NetworkInfo {
 impl NetworkInfo {
     pub fn fetch_ip() -> Task<Option<IpAddr>> {
         let thread_pool = AsyncComputeTaskPool::get();
-        thread_pool.spawn(async move {
-            match surf::get("https://api.ipify.org/").await {
-                Ok(mut response) => match response.body_string().await {
+        thread_pool.spawn(Compat::new(async move {
+            match reqwest::get("https://api.ipify.org/").await {
+                Ok(response) => match response.text().await {
                     Ok(ip_text) => match ip_text.parse::<Ipv4Addr>() {
                         Ok(address) => {
                             info!("Found Public IP: {}", address);
@@ -80,7 +81,7 @@ impl NetworkInfo {
                     None
                 }
             }
-        })
+        }))
     }
 }
 pub struct NetworkPlugin;
