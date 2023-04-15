@@ -30,7 +30,7 @@ pub enum PowerUp {
     Shield,
 }
 
-#[derive(Component, Default, Copy, FromReflect, Reflect, Debug, Clone)]
+#[derive(Component, Default, Copy, FromReflect, Reflect, Debug, Clone, Eq, PartialEq)]
 #[reflect(Component, Default)]
 pub enum Debuff {
     #[default]

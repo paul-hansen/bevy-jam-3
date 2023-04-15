@@ -7,7 +7,7 @@ use crate::bundles::lyon_rendering::ship_paths::SHIP_PATH;
 use crate::bundles::lyon_rendering::{get_path_from_verts, LyonRenderBundle};
 use crate::bundles::PhysicsBundle;
 use crate::game_manager::GameState;
-use crate::network::NetworkOwner;
+use crate::network::{is_server, NetworkOwner};
 use crate::player::commands::PlayerCommands;
 use crate::player::weapons::WeaponsPlugin;
 use crate::powerup::{Debuff, PowerUp};
@@ -40,6 +40,7 @@ impl Plugin for PlayerPlugin {
         app.add_systems(
             (player_actions, damage_players_outside_arena).in_set(OnUpdate(GameState::Playing)),
         );
+        app.add_system(update_thruster.run_if(is_server()));
         app.add_system(spawn_player_on_connected);
         app.add_system(despawn_on_player_disconnect);
         app.add_systems((pregame_listen_for_player_connect,).in_set(OnUpdate(GameState::PreGame)));
@@ -242,16 +243,20 @@ impl PlayerBundle {
 pub struct Thruster {
     pub val: f32,
 }
+
+#[derive(Component, Default, Reflect)]
+#[reflect(Default, Component)]
+pub struct ScaleYFromThruster;
+
 #[derive(Bundle, Default)]
-pub struct ThrusterBundle {
+pub struct ThrusterVisualsBundle {
     lyon_render: LyonRenderBundle,
-    thruster: Thruster,
-    replicate: Replication,
+    marker: ScaleYFromThruster,
 }
 
-impl ThrusterBundle {
+impl ThrusterVisualsBundle {
     pub fn with_color(p_color: PlayerColor) -> Self {
-        ThrusterBundle {
+        ThrusterVisualsBundle {
             lyon_render: LyonRenderBundle {
                 shape_render: ShapeBundle {
                     path: get_path_from_verts(&THRUSTER_JET, Vec2::splat(24.0)),
@@ -262,19 +267,25 @@ impl ThrusterBundle {
                 stroke: Stroke::color(p_color.color()),
                 fill: Fill::color(p_color.color()),
             },
-            thruster: Thruster { val: 0.0 },
-            replicate: Replication,
+            marker: ScaleYFromThruster,
         }
     }
 }
 
-fn handle_thruster(mut thrusters: Query<(&mut Transform, &Thruster)>, time: Res<Time>) {
-    for (mut transform, thruster) in thrusters.iter_mut() {
-        transform.scale.y = thruster.val
-            * ((time.elapsed_seconds_wrapped() * 20.0)
-                .sin()
-                .abs()
-                .clamp(0.5, 1.0));
+fn handle_thruster(
+    mut scale_y_from_thrust: Query<(Entity, &mut Transform), With<ScaleYFromThruster>>,
+    thrusters: Query<&Thruster>,
+    parents: Query<&Parent>,
+    time: Res<Time>,
+) {
+    for (entity, mut transform) in scale_y_from_thrust.iter_mut() {
+        for thruster in thrusters.iter_many(parents.iter_ancestors(entity)) {
+            transform.scale.y = thruster.val
+                * ((time.elapsed_seconds_wrapped() * 20.0)
+                    .sin()
+                    .abs()
+                    .clamp(0.5, 1.0));
+        }
     }
 }
 
@@ -365,19 +376,18 @@ fn insert_player_bundle(
 ) {
     for (entity, player, client_id, transform) in query.iter() {
         info!("Inserting Player bundle for player: {}", player);
-        let thruster_entity = commands
-            .spawn(ThrusterBundle::with_color(player.color))
-            .id();
+        commands.entity(entity).with_children(|cb| {
+            cb.spawn(ThrusterVisualsBundle::with_color(player.color));
+        });
 
         let player_entity = commands
             .entity(entity)
-            .insert(PhysicsBundle::default())
+            .insert((PhysicsBundle::default(),))
             .insert({
                 let mut bundle = PlayerBundle::with_color(player.color);
                 bundle.lyon.shape_render.transform = *transform;
                 bundle
             })
-            .insert_children(0, &[thruster_entity])
             .id();
 
         if let Some(client) = &client {
@@ -396,6 +406,19 @@ fn insert_player_bundle(
     }
 }
 
+pub fn update_thruster(
+    mut query: Query<(&Player, &ActionState<PlayerAction>, &mut Thruster), With<Player>>,
+    time: Res<Time>,
+) {
+    for (player, action_state, mut thruster) in query.iter_mut() {
+        if action_state.pressed(PlayerAction::Thrust) && player.debuff != Some(Debuff::Slowed) {
+            thruster.val = (thruster.val + time.delta_seconds()).min(1.0).max(0.0);
+        } else {
+            thruster.val = (thruster.val - time.delta_seconds()).min(1.0).max(0.0);
+        }
+    }
+}
+
 pub fn player_actions(
     mut query: Query<
         (
@@ -403,42 +426,15 @@ pub fn player_actions(
             &Transform,
             &ActionState<PlayerAction>,
             &mut Velocity,
-            Entity,
         ),
         With<Player>,
     >,
-    mut thrusters: Query<(&Parent, &mut Thruster)>,
     time: Res<Time>,
 ) {
-    for (player, transform, action_state, mut velocity, entity) in query.iter_mut() {
-        if action_state.pressed(PlayerAction::Thrust) {
+    for (player, transform, action_state, mut velocity) in query.iter_mut() {
+        if action_state.pressed(PlayerAction::Thrust) && player.debuff != Some(Debuff::Slowed) {
             let forward = transform.up();
-
-            //TODO: There's only one debuff, obviously this needs to be moved to a match at some point
-            match player.debuff {
-                Some(Debuff::Slowed) => {
-                    if let Some((_parent, mut thruster)) = thrusters
-                        .iter_mut()
-                        .find(|(parent, _thruster)| parent.get() == entity)
-                    {
-                        thruster.val = (thruster.val - time.delta_seconds()).min(1.0).max(0.0);
-                    }
-                }
-                _ => {
-                    velocity.linvel += forward.xy() * time.delta_seconds() * 50.0;
-                    if let Some((_parent, mut thruster)) = thrusters
-                        .iter_mut()
-                        .find(|(parent, _thruster)| parent.get() == entity)
-                    {
-                        thruster.val = (thruster.val + time.delta_seconds()).min(1.0).max(0.0);
-                    }
-                }
-            }
-        } else if let Some((_parent, mut thruster)) = thrusters
-            .iter_mut()
-            .find(|(parent, _thruster)| parent.get() == entity)
-        {
-            thruster.val = (thruster.val - time.delta_seconds()).min(1.0).max(0.0);
+            velocity.linvel += forward.xy() * time.delta_seconds() * 50.0;
         }
 
         if action_state.pressed(PlayerAction::TurnRight) {

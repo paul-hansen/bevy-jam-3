@@ -1,7 +1,7 @@
 use crate::health::Health;
 use crate::network::NetworkOwner;
 use crate::player::weapons::Weapon;
-use crate::player::{Player, PlayerAction, PlayerColor, Players};
+use crate::player::{Player, PlayerAction, PlayerColor, Players, Thruster};
 use bevy::ecs::system::{Command, Spawn};
 use bevy::prelude::*;
 use bevy_replicon::prelude::Replication;
@@ -39,6 +39,7 @@ impl Command for SpawnPlayer {
                 Health::default(),
                 self.network_owner,
                 Replication,
+                Thruster::default(),
                 ActionState::<PlayerAction>::default(),
                 Weapon {
                     weapon_type: super::weapons::WeaponType::Laser { fire_rate: 1.5 },
