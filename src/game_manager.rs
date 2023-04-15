@@ -288,7 +288,12 @@ type PersistentRootEntities = (
     Without<NoFrustumCulling>,
 );
 #[cfg(not(feature = "bevy_editor_pls"))]
-type PersistentRootEntities = (Without<Parent>, Without<Window>, Without<Persist>);
+type PersistentRootEntities = (
+    Without<Parent>,
+    Without<Window>,
+    Without<Persist>,
+    Without<NoFrustumCulling>,
+);
 
 fn despawn_everything(mut commands: Commands, query: Query<Entity, PersistentRootEntities>) {
     for entity in query.iter() {
