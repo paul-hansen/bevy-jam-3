@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 #[reflect(Resource)]
 pub struct MatchmakingState {
     pub lobby: Option<EphemeralMatchmakingLobby>,
+    pub lobby_public: bool,
     pub timer: Timer,
 }
 
@@ -17,6 +18,7 @@ impl Default for MatchmakingState {
     fn default() -> Self {
         Self {
             lobby: None,
+            lobby_public: false,
             timer: Timer::from_seconds(3.0, TimerMode::Repeating),
         }
     }
@@ -61,6 +63,9 @@ pub fn update_matchmaking_state(
     mm_res.timer.tick(time.delta());
 
     if mm_res.timer.just_finished() {
+        if !mm_res.lobby_public {
+            return;
+        }
         let url = "http://matchmaking.braymatter.com:8091/api/v1/matchmaking/ephemeral/lobbies";
 
         if let Some(hosted_lobby) = &mm_res.lobby {

@@ -10,7 +10,7 @@ use bevy_replicon::prelude::*;
 use bevy_replicon::renet::{
     ChannelConfig, ClientAuthentication, RenetConnectionConfig, ServerAuthentication, ServerConfig,
 };
-use std::net::{IpAddr, Ipv4Addr, SocketAddr, UdpSocket};
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr, UdpSocket};
 use std::time::SystemTime;
 
 pub trait NetworkCommandsExt {
@@ -148,7 +148,8 @@ impl Command for Listen {
             network_owner: NetworkOwner(SERVER_ID),
         }
         .write(world);
-        world.resource_mut::<MatchmakingState>().lobby = Some(EphemeralMatchmakingLobby {
+        let mut mm_state = world.resource_mut::<MatchmakingState>();
+        mm_state.lobby = Some(EphemeralMatchmakingLobby {
             ip: self.ip.to_string(),
             name: self.server_name,
             player_capacity: MAX_CLIENTS as u8,
@@ -157,6 +158,7 @@ impl Command for Listen {
             has_password: false,
             last_updated: 0,
         });
+        mm_state.lobby_public = self.ip.is_global_unstable();
     }
 }
 
@@ -192,4 +194,69 @@ fn apply_message_size_to_channels(channels: &mut [ChannelConfig]) {
             c.packet_budget = MAX_MESSAGE_SIZE * 2;
         }
     });
+}
+
+pub trait IpExt {
+    /// This is the same implementation as the currently unstable [`IpAddr::is_global()`],
+    /// re-implemented as an extension so we can use it in stable rust.
+    fn is_global_unstable(&self) -> bool;
+}
+
+impl IpExt for Ipv4Addr {
+    /// This is the same implementation as the currently unstable [`Ipv4Addr::is_global()`],
+    /// re-implemented as an extension so we can use it in stable rust.
+    fn is_global_unstable(&self) -> bool {
+        !(self.octets()[0] == 0 // "This network"
+            || self.is_private()
+            || self.octets()[0] == 100 && (self.octets()[1] & 0b1100_0000 == 0b0100_0000)
+            || self.is_loopback()
+            || self.is_link_local()
+            // addresses reserved for future protocols (`192.0.0.0/24`)
+            || (self.octets()[0] == 192 && self.octets()[1] == 0 && self.octets()[2] == 0)
+            || self.is_documentation()
+            || self.octets()[0] == 198 && (self.octets()[1] & 0xfe) == 18
+            || self.octets()[0] & 240 == 240 && !self.is_broadcast()
+            || self.is_broadcast())
+    }
+}
+
+impl IpExt for Ipv6Addr {
+    /// This is the same implementation as the currently unstable [`Ipv6Addr::is_global()`],
+    /// re-implemented as an extension so we can use it in stable rust.
+    fn is_global_unstable(&self) -> bool {
+        !(self.is_unspecified()
+            || self.is_loopback()
+            // IPv4-mapped Address (`::ffff:0:0/96`)
+            || matches!(self.segments(), [0, 0, 0, 0, 0, 0xffff, _, _])
+            // IPv4-IPv6 Translat. (`64:ff9b:1::/48`)
+            || matches!(self.segments(), [0x64, 0xff9b, 1, _, _, _, _, _])
+            // Discard-Only Address Block (`100::/64`)
+            || matches!(self.segments(), [0x100, 0, 0, 0, _, _, _, _])
+            // IETF Protocol Assignments (`2001::/23`)
+            || (matches!(self.segments(), [0x2001, b, _, _, _, _, _, _] if b < 0x200)
+            && !(
+            // Port Control Protocol Anycast (`2001:1::1`)
+            u128::from_be_bytes(self.octets()) == 0x2001_0001_0000_0000_0000_0000_0000_0001
+                // Traversal Using Relays around NAT Anycast (`2001:1::2`)
+                || u128::from_be_bytes(self.octets()) == 0x2001_0001_0000_0000_0000_0000_0000_0002
+                // AMT (`2001:3::/32`)
+                || matches!(self.segments(), [0x2001, 3, _, _, _, _, _, _])
+                // AS112-v6 (`2001:4:112::/48`)
+                || matches!(self.segments(), [0x2001, 4, 0x112, _, _, _, _, _])
+                // ORCHIDv2 (`2001:20::/28`)
+                || matches!(self.segments(), [0x2001, b, _, _, _, _, _, _] if (0x20..=0x2F).contains(&b))
+        ))
+            || ((self.segments()[0] == 0x2001) && (self.segments()[1] == 0xdb8))
+            || (self.segments()[0] & 0xfe00) == 0xfc00
+            || (self.segments()[0] & 0xffc0) == 0xfe80)
+    }
+}
+
+impl IpExt for IpAddr {
+    fn is_global_unstable(&self) -> bool {
+        match self {
+            IpAddr::V4(ip) => ip.is_global_unstable(),
+            IpAddr::V6(ip) => ip.is_global_unstable(),
+        }
+    }
 }
