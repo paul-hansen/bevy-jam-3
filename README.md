@@ -1,9 +1,12 @@
 # Stellar Squeezebox
 
-Our WIP entry for the [Bevy Game Jam #3](https://itch.io/jam/bevy-jam-3)
+Our entry for the [Bevy Game Jam #3](https://itch.io/jam/bevy-jam-3)
 
-Find the latest download under "Assets"
-here: [/releases/latest](https://github.com/paul-hansen/bevy-jam-3/releases/latest)
+Download here: https://prawl.itch.io/stellar-squeezebox
+
+![Screenshot of game with the text "red wins" and a red ship in the background with asteroids scattered around](https://img.itch.zone/aW1hZ2UvMjAwNTQyOS8xMTgyMzE1Ny5wbmc=/original/tsRAnL.png)
+
+![lobby menu with neon colors](https://img.itch.zone/aW1hZ2UvMjAwNTQyOS8xMTgyMzE1OC5wbmc=/original/8LSYP%2B.png)
 
 To play a game locally, you will need to launch the game twice, and make sure to set both the host and client IP
 to `127.0.0.1`.
